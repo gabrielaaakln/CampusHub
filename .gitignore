@@ -1,0 +1,29 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.claude
+
+# prinde și `campushub-odvserver/.env`, care ține tokenul de tunel și secretul Entra
+.env
+.env.*
+!.env.example
+
+# runtime data never in git
+apps/api/uploads/
+apps/api/snapshots/
+web-dist/
+releases/
+# the stack that runs on the private host lives outside this repository
+# only its scripts stay here, its data and its compose file do not
+deploy/**/data/
+deploy/**/backups/
+backups/
+
+*.log
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+
