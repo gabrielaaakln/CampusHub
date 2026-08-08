@@ -1,6 +1,7 @@
 import { createApp } from './app.js';
 import { config, featureSummary } from './config.js';
 import { logger } from './lib/logger.js';
+import { disconnect } from './lib/db.js';
 
 const app = createApp();
 const server = app.listen(config.port, () => {
@@ -14,3 +15,12 @@ const server = app.listen(config.port, () => {
     logger.warn('FEATURE_REGISTRATION is on without email verification: anyone can claim an address');
   }
 });
+
+for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+  process.on(signal, () => {
+    logger.info(`${signal} received, shutting down`);
+    server.close(() => {
+      void disconnect().finally(() => process.exit(0));
+    });
+  });
+}

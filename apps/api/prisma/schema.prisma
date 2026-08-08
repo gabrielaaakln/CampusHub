@@ -1,0 +1,744 @@
+// campushub schema
+// the physical schema is owned by the hand written sql in prisma migrations
+// this file only mirrors it so prisma client has types
+// triggers ro_unaccent trigram and partial indexes live in sql see docs decisions md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---- enums ----
+enum WeekParity {
+  par
+  impar
+  ambele
+
+  @@map("week_parity")
+}
+
+enum BreakKind {
+  vacanta
+  sesiune
+  practica
+  zi_libera
+
+  @@map("break_kind")
+}
+
+enum UserRole {
+  student
+  moderator
+  admin
+
+  @@map("user_role")
+}
+
+enum AuthProvider {
+  local
+  sso
+  mock
+
+  @@map("auth_provider")
+}
+
+enum RoomType {
+  curs
+  seminar
+  laborator
+  birou
+  altele
+
+  @@map("room_type")
+}
+
+enum DayOfWeek {
+  luni
+  marti
+  miercuri
+  joi
+  vineri
+  sambata
+  duminica
+
+  @@map("day_of_week")
+}
+
+enum ClassType {
+  curs
+  seminar
+  laborator
+  proiect
+
+  @@map("class_type")
+}
+
+enum ScheduleSource {
+  manual
+  import
+  scraper
+
+  @@map("schedule_source")
+}
+
+enum ScrapeStatus {
+  success
+  partial
+  failed
+
+  @@map("scrape_status")
+}
+
+enum ScheduleChangeKind {
+  added
+  changed
+  removed
+
+  @@map("schedule_change_kind")
+}
+
+enum DeadlineType {
+  tema
+  examen
+  proiect
+  altele
+
+  @@map("deadline_type")
+}
+
+enum ListingKind {
+  produs
+  serviciu
+
+  @@map("listing_kind")
+}
+
+enum ListingStatus {
+  activ
+  rezervat
+  inchis
+
+  @@map("listing_status")
+}
+
+enum RequestStatus {
+  pending
+  accepted
+  declined
+  completed
+
+  @@map("request_status")
+}
+
+enum ReportTarget {
+  post
+  comment
+  listing
+  user
+
+  @@map("report_target")
+}
+
+enum ReportStatus {
+  open
+  resolved
+  dismissed
+
+  @@map("report_status")
+}
+
+// ---- faculties groups subjects ----
+model Faculty {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(200)
+  shortName  String?  @map("short_name") @db.VarChar(50)
+  university String?  @db.VarChar(200)
+  timezone   String   @default("Europe/Bucharest") @db.VarChar(50)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  groups     StudyGroup[]
+  subjects   Subject[]
+  terms      AcademicTerm[]
+  users      User[]
+  buildings  Building[]
+  deadlines  Deadline[]
+  categories ForumCategory[]
+  listings   Listing[]
+  events     Event[]
+  rights     RightsArticle[]
+  scrapeRuns ScrapeRun[]
+
+  @@map("faculties")
+}
+
+model StudyGroup {
+  id        Int    @id @default(autoincrement())
+  facultyId Int    @map("faculty_id")
+  name      String @db.VarChar(50)
+  nameNorm  String @map("name_norm") @db.VarChar(50)
+  studyYear Int    @map("study_year") @db.SmallInt
+  subgroups Int    @default(2) @db.SmallInt
+
+  faculty         Faculty          @relation(fields: [facultyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users           User[]
+  scheduleEntries ScheduleEntry[]
+  deadlines       Deadline[]
+  scheduleChanges ScheduleChange[]
+
+  @@unique([facultyId, nameNorm])
+  @@map("study_groups")
+}
+
+model Subject {
+  id        Int     @id @default(autoincrement())
+  facultyId Int     @map("faculty_id")
+  name      String  @db.VarChar(200)
+  nameNorm  String  @map("name_norm") @db.VarChar(200)
+  shortName String? @map("short_name") @db.VarChar(50)
+  studyYear Int?    @map("study_year") @db.SmallInt
+
+  faculty         Faculty         @relation(fields: [facultyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  aliases         SubjectAlias[]
+  scheduleEntries ScheduleEntry[]
+  deadlines       Deadline[]
+  posts           ForumPost[]
+  listings        Listing[]
+
+  @@unique([facultyId, nameNorm])
+  @@map("subjects")
+}
+
+model SubjectAlias {
+  id        Int    @id @default(autoincrement())
+  subjectId Int    @map("subject_id")
+  aliasNorm String @map("alias_norm") @db.VarChar(200)
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([subjectId, aliasNorm])
+  @@index([aliasNorm], map: "idx_subject_aliases_norm")
+  @@map("subject_aliases")
+}
+
+// ---- academic calendar ----
+model AcademicTerm {
+  id              Int        @id @default(autoincrement())
+  facultyId       Int        @map("faculty_id")
+  academicYear    String     @map("academic_year") @db.VarChar(9)
+  semester        Int        @db.SmallInt
+  startsOn        DateTime   @map("starts_on") @db.Date
+  endsOn          DateTime   @map("ends_on") @db.Date
+  firstWeekParity WeekParity @default(impar) @map("first_week_parity")
+  isCurrent       Boolean    @default(false) @map("is_current")
+
+  faculty    Faculty         @relation(fields: [facultyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  breaks     AcademicBreak[]
+  entries    ScheduleEntry[]
+  scrapeRuns ScrapeRun[]
+
+  @@unique([facultyId, academicYear, semester])
+  @@map("academic_terms")
+}
+
+model AcademicBreak {
+  id       Int       @id @default(autoincrement())
+  termId   Int       @map("term_id")
+  kind     BreakKind @default(vacanta)
+  label    String?   @db.VarChar(100)
+  startsOn DateTime  @map("starts_on") @db.Date
+  endsOn   DateTime  @map("ends_on") @db.Date
+
+  term AcademicTerm @relation(fields: [termId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([termId, startsOn], map: "idx_breaks_term")
+  @@map("academic_breaks")
+}
+
+// ---- users ----
+model User {
+  id            Int          @id @default(autoincrement())
+  displayName   String       @map("display_name") @db.VarChar(80)
+  email         String       @unique @db.Citext
+  emailVerified Boolean      @default(false) @map("email_verified")
+  passwordHash  String?      @map("password_hash") @db.VarChar(255)
+  authProvider  AuthProvider @default(local) @map("auth_provider")
+  /// entra object id stable across email changes null for accounts that never used sso
+  facultyId     Int?         @map("faculty_id")
+  groupId       Int?         @map("group_id")
+  subgroup      Int?         @db.SmallInt
+  role          UserRole     @default(student)
+  avatarUrl     String?      @map("avatar_url") @db.VarChar(255)
+  isBanned      Boolean      @default(false) @map("is_banned")
+  anonymizedAt  DateTime?    @map("anonymized_at") @db.Timestamptz
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime     @default(now()) @map("updated_at") @db.Timestamptz
+
+  faculty         Faculty?         @relation(fields: [facultyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  group           StudyGroup?      @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  emailTokens     EmailToken[]
+  deadlines       Deadline[]
+  posts           ForumPost[]
+  comments        ForumComment[]
+  postVotes       PostVote[]
+  commentVotes    CommentVote[]
+  listings        Listing[]
+  listingRequests ListingRequest[]
+  events          Event[]
+  eventAttendees  EventAttendee[]
+  notifications   Notification[]
+  reportsMade     Report[]         @relation("ReportReporter")
+  reportsHandled  Report[]         @relation("ReportHandler")
+
+  @@index([facultyId], map: "idx_users_faculty")
+  @@index([groupId], map: "idx_users_group")
+  @@map("users")
+}
+
+model EmailToken {
+  token     String    @id @db.VarChar(64)
+  userId    Int       @map("user_id")
+  purpose   String    @db.VarChar(30)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  usedAt    DateTime? @map("used_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId], map: "idx_email_tokens_user")
+  @@map("email_tokens")
+}
+
+/// owned by connect pg simple never written by application code
+model UserSession {
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamptz
+
+  @@index([expire], map: "idx_sessions_expire")
+  @@map("user_sessions")
+}
+
+// ---- map ----
+model Building {
+  id          Int      @id @default(autoincrement())
+  facultyId   Int      @map("faculty_id")
+  name        String   @db.VarChar(150)
+  code        String?  @db.VarChar(10)
+  address     String?  @db.VarChar(200)
+  latitude    Decimal? @db.Decimal(9, 6)
+  longitude   Decimal? @db.Decimal(9, 6)
+  entranceLat Decimal? @map("entrance_lat") @db.Decimal(9, 6)
+  entranceLng Decimal? @map("entrance_lng") @db.Decimal(9, 6)
+
+  faculty Faculty @relation(fields: [facultyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  floors  Floor[]
+
+  @@unique([facultyId, name])
+  @@map("buildings")
+}
+
+model Floor {
+  id         Int     @id @default(autoincrement())
+  buildingId Int     @map("building_id")
+  level      Int     @db.SmallInt
+  label      String? @db.VarChar(30)
+  svgUrl     String? @map("svg_url") @db.VarChar(255)
+  widthPx    Int?    @map("width_px")
+  heightPx   Int?    @map("height_px")
+
+  building Building @relation(fields: [buildingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  rooms    Room[]
+
+  @@unique([buildingId, level])
+  @@map("floors")
+}
+
+model Room {
+  id             Int      @id @default(autoincrement())
+  floorId        Int      @map("floor_id")
+  roomNumber     String   @map("room_number") @db.VarChar(20)
+  roomNumberNorm String   @map("room_number_norm") @db.VarChar(20)
+  roomType       RoomType @default(curs) @map("room_type")
+  capacity       Int?
+  svgElementId   String?  @map("svg_element_id") @db.VarChar(50)
+  directions     String?  @db.VarChar(255)
+  notes          String?  @db.VarChar(255)
+
+  floor           Floor           @relation(fields: [floorId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  aliases         RoomAlias[]
+  scheduleEntries ScheduleEntry[]
+  events          Event[]
+
+  @@unique([floorId, roomNumber])
+  @@index([floorId], map: "idx_rooms_floor")
+  @@map("rooms")
+}
+
+model RoomAlias {
+  id        Int    @id @default(autoincrement())
+  roomId    Int    @map("room_id")
+  alias     String @db.VarChar(120)
+  aliasNorm String @map("alias_norm") @db.VarChar(120)
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([roomId, aliasNorm])
+  @@index([roomId], map: "idx_room_aliases_room")
+  @@map("room_aliases")
+}
+
+// ---- schedule ----
+model ScheduleEntry {
+  id            Int            @id @default(autoincrement())
+  termId        Int            @map("term_id")
+  groupId       Int            @map("group_id")
+  subgroup      Int            @default(0) @db.SmallInt
+  dayOfWeek     DayOfWeek      @map("day_of_week")
+  startTime     DateTime       @map("start_time") @db.Time
+  endTime       DateTime       @map("end_time") @db.Time
+  classType     ClassType      @default(curs) @map("class_type")
+  parity        WeekParity     @default(ambele)
+  // null on both sides means the whole term
+  subjectId     Int?           @map("subject_id")
+  subjectRaw    String         @map("subject_raw") @db.VarChar(200)
+  roomId        Int?           @map("room_id")
+  roomRaw       String?        @map("room_raw") @db.VarChar(50)
+  professor     String?        @db.VarChar(150)
+  source        ScheduleSource @default(manual)
+  contentHash   String         @map("content_hash") @db.VarChar(64)
+  isActive      Boolean        @default(true) @map("is_active")
+  firstSeenAt   DateTime       @default(now()) @map("first_seen_at") @db.Timestamptz
+  lastSeenAt    DateTime       @default(now()) @map("last_seen_at") @db.Timestamptz
+  deactivatedAt DateTime?      @map("deactivated_at") @db.Timestamptz
+
+  term    AcademicTerm     @relation(fields: [termId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  group   StudyGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  subject Subject?         @relation(fields: [subjectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  room    Room?            @relation(fields: [roomId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  changes ScheduleChange[]
+
+  // the key is the slot not its content subject room and professor are attributes
+  @@unique([termId, groupId, subgroup, dayOfWeek, startTime, classType, parity], map: "uq_schedule_slot")
+  @@index([roomId], map: "idx_schedule_room")
+  @@index([subjectId], map: "idx_schedule_subject")
+  @@index([termId], map: "idx_schedule_term")
+  @@map("schedule_entries")
+}
+
+model ScrapeRun {
+  id              Int            @id @default(autoincrement())
+  facultyId       Int?           @map("faculty_id")
+  termId          Int?           @map("term_id")
+  source          ScheduleSource @default(scraper)
+  adapter         String?        @db.VarChar(50)
+  startedAt       DateTime       @default(now()) @map("started_at") @db.Timestamptz
+  finishedAt      DateTime?      @map("finished_at") @db.Timestamptz
+  status          ScrapeStatus?
+  entriesFound    Int            @default(0) @map("entries_found")
+  entriesAdded    Int            @default(0) @map("entries_added")
+  entriesChanged  Int            @default(0) @map("entries_changed")
+  entriesRemoved  Int            @default(0) @map("entries_removed")
+  rawSnapshotPath String?        @map("raw_snapshot_path") @db.VarChar(255)
+  errorMessage    String?        @map("error_message")
+
+  faculty Faculty?         @relation(fields: [facultyId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  term    AcademicTerm?    @relation(fields: [termId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  changes ScheduleChange[]
+
+  @@index([facultyId, startedAt(sort: Desc)], map: "idx_scrape_runs_faculty")
+  @@index([termId], map: "idx_scrape_runs_term")
+  @@map("scrape_runs")
+}
+
+model ScheduleChange {
+  id        Int                @id @default(autoincrement())
+  runId     Int                @map("run_id")
+  entryId   Int?               @map("entry_id")
+  groupId   Int?               @map("group_id")
+  kind      ScheduleChangeKind
+  before    Json?
+  after     Json?
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz
+
+  run   ScrapeRun      @relation(fields: [runId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  entry ScheduleEntry? @relation(fields: [entryId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  group StudyGroup?    @relation(fields: [groupId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([runId], map: "idx_schedule_changes_run")
+  @@index([groupId, createdAt(sort: Desc)], map: "idx_schedule_changes_group")
+  @@index([entryId], map: "idx_schedule_changes_entry")
+  @@map("schedule_changes")
+}
+
+// ---- deadlines ----
+model Deadline {
+  id          Int          @id @default(autoincrement())
+  facultyId   Int          @map("faculty_id")
+  groupId     Int?         @map("group_id")
+  subjectId   Int?         @map("subject_id")
+  createdBy   Int?         @map("created_by")
+  title       String       @db.VarChar(200)
+  type        DeadlineType @default(tema)
+  dueAt       DateTime     @map("due_at") @db.Timestamptz
+  description String?
+  isDeleted   Boolean      @default(false) @map("is_deleted")
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime     @default(now()) @map("updated_at") @db.Timestamptz
+
+  faculty Faculty     @relation(fields: [facultyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  group   StudyGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  subject Subject?    @relation(fields: [subjectId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  author  User?       @relation(fields: [createdBy], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([subjectId], map: "idx_deadlines_subject")
+  @@index([createdBy], map: "idx_deadlines_author")
+  @@map("deadlines")
+}
+
+// ---- forum ----
+model ForumCategory {
+  id          Int     @id @default(autoincrement())
+  facultyId   Int     @map("faculty_id")
+  name        String  @db.VarChar(100)
+  slug        String  @db.VarChar(100)
+  description String? @db.VarChar(255)
+  position    Int     @default(0) @db.SmallInt
+
+  faculty Faculty     @relation(fields: [facultyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  posts   ForumPost[]
+
+  @@unique([facultyId, slug])
+  @@map("forum_categories")
+}
+
+model ForumPost {
+  id           Int                     @id @default(autoincrement())
+  categoryId   Int                     @map("category_id")
+  authorId     Int?                    @map("author_id")
+  subjectId    Int?                    @map("subject_id")
+  title        String                  @db.VarChar(200)
+  content      String?
+  score        Int                     @default(0)
+  commentCount Int                     @default(0) @map("comment_count")
+  isDeleted    Boolean                 @default(false) @map("is_deleted")
+  createdAt    DateTime                @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime                @default(now()) @map("updated_at") @db.Timestamptz
+  searchVector Unsupported("tsvector")? @map("search_vector")
+
+  category ForumCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  author   User?          @relation(fields: [authorId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  subject  Subject?       @relation(fields: [subjectId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  comments ForumComment[]
+  votes    PostVote[]
+
+  @@index([authorId], map: "idx_posts_author")
+  @@index([subjectId], map: "idx_posts_subject")
+  @@map("forum_posts")
+}
+
+model ForumComment {
+  id              Int      @id @default(autoincrement())
+  postId          Int      @map("post_id")
+  parentCommentId Int?     @map("parent_comment_id")
+  authorId        Int?     @map("author_id")
+  content         String
+  depth           Int      @default(0) @db.SmallInt
+  score           Int      @default(0)
+  isDeleted       Boolean  @default(false) @map("is_deleted")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  post     ForumPost      @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  parent   ForumComment?  @relation("CommentThread", fields: [parentCommentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  children ForumComment[] @relation("CommentThread")
+  author   User?          @relation(fields: [authorId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  votes    CommentVote[]
+
+  @@index([postId, createdAt], map: "idx_comments_post")
+  @@index([parentCommentId], map: "idx_comments_parent")
+  @@index([authorId], map: "idx_comments_author")
+  @@map("forum_comments")
+}
+
+model PostVote {
+  userId Int @map("user_id")
+  postId Int @map("post_id")
+  value  Int @db.SmallInt
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([userId, postId])
+  @@index([postId], map: "idx_post_votes_post")
+  @@map("post_votes")
+}
+
+model CommentVote {
+  userId    Int @map("user_id")
+  commentId Int @map("comment_id")
+  value     Int @db.SmallInt
+
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  comment ForumComment @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([userId, commentId])
+  @@index([commentId], map: "idx_comment_votes_comment")
+  @@map("comment_votes")
+}
+
+// ---- marketplace ----
+model Listing {
+  id           Int                     @id @default(autoincrement())
+  facultyId    Int                     @map("faculty_id")
+  authorId     Int                     @map("author_id")
+  kind         ListingKind
+  subjectId    Int?                    @map("subject_id")
+  title        String                  @db.VarChar(200)
+  description  String?
+  price        Decimal?                @db.Decimal(10, 2)
+  currency     String                  @default("RON") @db.Char(3)
+  priceUnit    String?                 @map("price_unit") @db.VarChar(20)
+  status       ListingStatus           @default(activ)
+  isDeleted    Boolean                 @default(false) @map("is_deleted")
+  createdAt    DateTime                @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime                @default(now()) @map("updated_at") @db.Timestamptz
+  searchVector Unsupported("tsvector")? @map("search_vector")
+
+  faculty  Faculty          @relation(fields: [facultyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  author   User             @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  subject  Subject?         @relation(fields: [subjectId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  images   ListingImage[]
+  requests ListingRequest[]
+
+  @@index([authorId], map: "idx_listings_author")
+  @@index([subjectId], map: "idx_listings_subject")
+  @@map("listings")
+}
+
+model ListingImage {
+  id        Int    @id @default(autoincrement())
+  listingId Int    @map("listing_id")
+  path      String @db.VarChar(255)
+  width     Int?
+  height    Int?
+  position  Int    @default(0) @db.SmallInt
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([listingId, position], map: "idx_listing_images_listing")
+  @@map("listing_images")
+}
+
+model ListingRequest {
+  id          Int           @id @default(autoincrement())
+  listingId   Int           @map("listing_id")
+  requesterId Int           @map("requester_id")
+  message     String?
+  status      RequestStatus @default(pending)
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime      @default(now()) @map("updated_at") @db.Timestamptz
+
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  requester User    @relation(fields: [requesterId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([listingId, requesterId])
+  @@index([requesterId, createdAt(sort: Desc)], map: "idx_requests_requester")
+  @@map("listing_requests")
+}
+
+// ---- events ----
+model Event {
+  id          Int       @id @default(autoincrement())
+  facultyId   Int       @map("faculty_id")
+  createdBy   Int?      @map("created_by")
+  title       String    @db.VarChar(200)
+  description String?
+  location    String?   @db.VarChar(200)
+  roomId      Int?      @map("room_id")
+  startsAt    DateTime  @map("starts_at") @db.Timestamptz
+  endsAt      DateTime? @map("ends_at") @db.Timestamptz
+  externalUrl String?   @map("external_url") @db.VarChar(255)
+  coverPath   String?   @map("cover_path") @db.VarChar(255)
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  faculty   Faculty         @relation(fields: [facultyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  author    User?           @relation(fields: [createdBy], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  room      Room?           @relation(fields: [roomId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  attendees EventAttendee[]
+
+  @@index([roomId], map: "idx_events_room")
+  @@index([createdBy], map: "idx_events_author")
+  @@map("events")
+}
+
+model EventAttendee {
+  eventId   Int      @map("event_id")
+  userId    Int      @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([eventId, userId])
+  @@index([userId], map: "idx_attendees_user")
+  @@map("event_attendees")
+}
+
+// ---- student rights ----
+model RightsArticle {
+  id           Int                     @id @default(autoincrement())
+  facultyId    Int?                    @map("faculty_id")
+  category     String                  @db.VarChar(80)
+  title        String                  @db.VarChar(200)
+  summary      String
+  officialUrl  String?                 @map("official_url") @db.VarChar(255)
+  position     Int                     @default(0) @db.SmallInt
+  updatedAt    DateTime                @default(now()) @map("updated_at") @db.Timestamptz
+  searchVector Unsupported("tsvector")? @map("search_vector")
+
+  faculty Faculty? @relation(fields: [facultyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([facultyId, category], map: "idx_rights_faculty")
+  @@map("rights_articles")
+}
+
+// ---- moderation and notifications ----
+/// polymorphic on purpose low volume moderator only resolved in code with a switch
+model Report {
+  id         Int          @id @default(autoincrement())
+  reporterId Int?         @map("reporter_id")
+  targetType ReportTarget @map("target_type")
+  targetId   Int          @map("target_id")
+  reason     String?      @db.VarChar(255)
+  status     ReportStatus @default(open)
+  handledBy  Int?         @map("handled_by")
+  handledAt  DateTime?    @map("handled_at") @db.Timestamptz
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  reporter User? @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  handler  User? @relation("ReportHandler", fields: [handledBy], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@unique([reporterId, targetType, targetId])
+  @@index([handledBy], map: "idx_reports_handler")
+  @@map("reports")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  type      String   @db.VarChar(50)
+  title     String   @db.VarChar(200)
+  body      String?
+  link      String?  @db.VarChar(255)
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId, createdAt(sort: Desc)], map: "idx_notif_all")
+  @@map("notifications")
+}

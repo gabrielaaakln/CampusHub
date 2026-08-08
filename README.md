@@ -21,3 +21,13 @@ dimineață: ce am acum, unde, și ce urmează.
 
 Ecranul principal al aplicației, „Acum", răspunde fix la ea.
 
+## Datele
+
+PostgreSQL 16, 30 de tabele, 16 tipuri enumerate. Câteva lucruri care nu sunt evidente:
+
+- căutarea merge printr-o configurație proprie care ignoră diacriticele și aplică stemming românesc,
+  plus indexuri trigram pentru potrivirea aproximativă;
+- scorurile de la voturi și numărul de comentarii sunt întreținute de trigger-e, nu de aplicație;
+- ștergerea e logică peste tot unde firul discuției sau istoricul contează;
+- coloanele normalizate (fără diacritice, minuscule) există separat de forma de afișare, iar aceeași
+  funcție de normalizare se folosește și la scriere, și la citire.

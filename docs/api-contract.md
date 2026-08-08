@@ -15,3 +15,25 @@ Prefix: `/api/v1`. Convențiile sunt fixate înainte de primul endpoint și nu s
 - Context implicit din sesiune: `/schedule` fără parametri înseamnă orarul grupei și al semigrupei
   curente.
 
+## Endpoint-uri implementate
+
+| Metodă | Rută | Auth | Note |
+|---|---|---|---|
+| GET | `/health` | - | verifică și baza de date; 503 dacă baza nu răspunde |
+| GET | `/config` | - | flag-uri de funcționalități și facultatea curentă |
+### `GET /config`
+
+```json
+{
+  "features": {
+    "scraper": false, "floorplans": false, "uploads": false, "sse": false,
+    "emailVerify": false, "events": true, "moderationPanel": true, "icsExport": true,
+    "sso": false, "passwordLogin": true, "registration": true
+  },
+  "faculty": { "id": 1, "shortName": "AC", "name": "...", "timezone": "Europe/Bucharest" }
+}
+```
+
+Frontend-ul citește asta o dată la boot și ascunde ce nu există. Un flag stins nu e o gaură vizibilă
+în interfață, ci o variantă mai simplă a aceluiași ecran.
+
