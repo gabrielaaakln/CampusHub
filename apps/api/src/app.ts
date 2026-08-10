@@ -5,8 +5,10 @@ import { pinoHttp } from 'pino-http';
 import { config } from './config.js';
 import { logger } from './lib/logger.js';
 import { apiRouter } from './routes.js';
+import { devLogin, loadUser } from './middleware/auth.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { globalLimiter } from './middleware/rateLimit.js';
+import { sessionMiddleware } from './middleware/session.js';
 
 export function createApp(): Express {
   const app = express();
@@ -20,6 +22,9 @@ export function createApp(): Express {
   app.use(express.json({ limit: '100kb' }));
   app.use(express.urlencoded({ extended: false, limit: '100kb' }));
   app.use(cookieParser(config.session.secret));
+  app.use(sessionMiddleware());
+  app.use(loadUser);
+  app.use(devLogin);
   app.use(globalLimiter);
 
   app.use('/api/v1', apiRouter);

@@ -15,12 +15,28 @@ Prefix: `/api/v1`. Convențiile sunt fixate înainte de primul endpoint și nu s
 - Context implicit din sesiune: `/schedule` fără parametri înseamnă orarul grupei și al semigrupei
   curente.
 
+## Autentificare
+
+- Sesiune în cookie `httpOnly`, `sameSite: lax`, `secure` în producție, prefix `__Host-` în producție.
+- CSRF double submit pe toate metodele care schimbă starea. Ia un token de la `GET /csrf` și
+  trimite-l ca antet `x-csrf-token`.
+- Tokenul CSRF e legat de id-ul de sesiune: după login sau logout trebuie cerut din nou.
+- Limite: 100 req/min global, 10 req/min pe scriere, 5 la 15 minute pe login (eșecurile contează,
+  reușitele nu).
+
 ## Endpoint-uri implementate
 
 | Metodă | Rută | Auth | Note |
 |---|---|---|---|
 | GET | `/health` | - | verifică și baza de date; 503 dacă baza nu răspunde |
 | GET | `/config` | - | flag-uri de funcționalități și facultatea curentă |
+| GET | `/csrf` | - | `{ data: { token } }` |
+| POST | `/auth/register` | - | 201; doar domenii instituționale; 409 la email duplicat; **montat doar cu flag-ul `registration`**, care implicit e stins în producție |
+| POST | `/auth/login` | - | 200 cu utilizatorul; mesaj identic pentru parolă greșită și cont inexistent; **montat doar cu flag-ul `passwordLogin`** |
+| POST | `/auth/logout` | - | 204 |
+| GET | `/auth/me` | - | 200 cu `data: null` pentru anonimi |
+| PATCH | `/auth/me` | da | nume afișat, grupă, semigrupă |
+| DELETE | `/auth/me` | da | anonimizare, nu ștergere fizică; 204 |
 ### `GET /config`
 
 ```json

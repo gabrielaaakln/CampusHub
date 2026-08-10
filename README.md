@@ -21,6 +21,48 @@ dimineață: ce am acum, unde, și ce urmează.
 
 Ecranul principal al aplicației, „Acum", răspunde fix la ea.
 
+## Roluri
+
+| Rol | Ce poate în plus |
+|---|---|
+| student | tot ce ține de conținut propriu: postări, comentarii, voturi, anunțuri, cereri, termene pe grupa lui, înscriere la evenimente, rapoarte |
+| moderator | coada de rapoarte, ștergerea conținutului altora, publicarea de evenimente, termene pentru toată facultatea |
+| admin | tot ce poate moderatorul, plus importul de orar |
+
+Rolurile sunt ierarhice: adminul cuprinde moderatorul. Verificarea se face în server la fiecare
+operație, nu în interfață. Interfața doar ascunde ce oricum ar fi refuzat.
+
+## Autentificare
+
+Formularul cu parolă a rămas în spatele unui flag, pentru cele două conturi de prezentare și pentru
+teste. Înregistrarea cu parolă e un flag separat, stins în producție: până când nu există confirmare pe
+mail, nimic nu dovedește că adresa tastată e a ta, iar un formular deschis pe un site public ar
+distribui conturi care arată instituțional. Cu flagul stins, ruta nu se montează deloc.
+
+## Feature flags
+
+Un singur fișier de configurare citește flagurile, iar o rută publică le expune interfeței. Frontendul
+le citește o dată la pornire și ascunde ce nu există. Un modul cu flagul stins nu are rute deloc, iar
+ecranul lui redirectează în loc să afișeze un buton mort.
+
+Starea din producție, la data scrierii:
+
+| Flag | Stare | Ce înseamnă |
+|---|---|---|
+| `passwordLogin` | pornit | formularul cu parolă, pentru conturile de demo |
+| `registration` | stins | nu se pot face conturi cu parolă |
+| `events` | pornit | modulul de evenimente |
+| `moderationPanel` | pornit | coada de rapoarte |
+| `icsExport` | pornit | exportul de calendar |
+| `uploads` | stins | imagini la anunțuri, endpointul nu există încă |
+| `floorplans` | stins | planuri SVG pe hartă, fișierele nu sunt desenate |
+| `sse` | stins | notificări prin flux deschis, polling-ul e suficient |
+| `scraper` | stins | import automat nocturn |
+| `emailVerify` | stins | confirmare pe mail |
+
+Regula după care se aprind: un flag pornit e o promisiune către frontend. Dacă endpointul din spate nu
+există, flagul stă stins.
+
 ## Datele
 
 PostgreSQL 16, 30 de tabele, 16 tipuri enumerate. Câteva lucruri care nu sunt evidente:
