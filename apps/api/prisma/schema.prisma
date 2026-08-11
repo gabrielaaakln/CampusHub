@@ -403,6 +403,8 @@ model ScheduleEntry {
   classType     ClassType      @default(curs) @map("class_type")
   parity        WeekParity     @default(ambele)
   // null on both sides means the whole term
+  startsWeek    Int?           @map("starts_week") @db.SmallInt
+  endsWeek      Int?           @map("ends_week") @db.SmallInt
   subjectId     Int?           @map("subject_id")
   subjectRaw    String         @map("subject_raw") @db.VarChar(200)
   roomId        Int?           @map("room_id")

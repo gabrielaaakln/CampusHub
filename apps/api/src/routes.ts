@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { healthRouter } from './modules/health/routes.js';
 import { configRouter } from './modules/config/routes.js';
 import { authRouter } from './modules/auth/routes.js';
+import { scheduleRouter } from './modules/schedule/routes.js';
 import { doubleCsrfProtection, generateCsrfToken } from './middleware/csrf.js';
 
 export const apiRouter: Router = Router();
@@ -28,3 +29,4 @@ apiRouter.get('/csrf', async (req, res) => {
 apiRouter.use(doubleCsrfProtection);
 
 apiRouter.use(authRouter);
+apiRouter.use(scheduleRouter);

@@ -1,0 +1,41 @@
+group,subgroup,day,start,end,type,parity,subject,room,professor
+CTI 3A,0,luni,08:00,10:00,curs,ambele,Programarea Calculatoarelor,A201,conf. dr. ing. Mihai Petrescu
+CTI 3A,0,luni,10:00,12:00,curs,ambele,Rețele de Calculatoare,A201,șef lucr. dr. ing. Andrei Lupu
+CTI 3A,1,luni,12:00,14:00,laborator,ambele,Programarea Calculatoarelor,A105,asist. dr. ing. Ioana Drăgan
+CTI 3A,2,luni,12:00,14:00,laborator,ambele,Rețele de Calculatoare,A107,asist. dr. ing. Radu Marin
+CTI 3A,0,marti,08:00,10:00,curs,ambele,Baze de Date,A202,prof. dr. ing. Elena Chiriac
+CTI 3A,0,marti,10:00,12:00,seminar,ambele,Baze de Date,A210,asist. dr. ing. Ioana Drăgan
+CTI 3A,1,marti,12:00,14:00,laborator,ambele,Baze de Date,A108,asist. dr. ing. Ioana Drăgan
+CTI 3A,2,marti,12:00,14:00,laborator,ambele,Sisteme de Operare,A109,șef lucr. dr. ing. Andrei Lupu
+CTI 3A,0,miercuri,08:00,10:00,curs,ambele,Sisteme de Operare,A201,conf. dr. ing. Mihai Petrescu
+CTI 3A,0,miercuri,10:00,12:00,curs,impar,Inteligență Artificială,A203,prof. dr. ing. Elena Chiriac
+CTI 3A,0,miercuri,10:00,12:00,curs,par,Ingineria Programării,A203,șef lucr. dr. ing. Cristina Barbu
+CTI 3A,1,joi,08:00,10:00,laborator,ambele,Inteligență Artificială,A110,asist. dr. ing. Radu Marin
+CTI 3A,2,joi,08:00,10:00,laborator,ambele,Ingineria Programării,A111,șef lucr. dr. ing. Cristina Barbu
+CTI 3A,0,joi,10:00,12:00,curs,ambele,Arhitectura Calculatoarelor,A202,conf. dr. ing. Mihai Petrescu
+CTI 3A,0,vineri,08:00,10:00,seminar,ambele,Arhitectura Calculatoarelor,A210,asist. dr. ing. Radu Marin
+CTI 3B,0,luni,10:00,12:00,curs,ambele,Programarea Calculatoarelor,A201,conf. dr. ing. Mihai Petrescu
+CTI 3B,0,luni,12:00,14:00,curs,ambele,Rețele de Calculatoare,A201,șef lucr. dr. ing. Andrei Lupu
+CTI 3B,1,luni,14:00,16:00,laborator,ambele,Programarea Calculatoarelor,A105,asist. dr. ing. Ioana Drăgan
+CTI 3B,2,luni,14:00,16:00,laborator,ambele,Rețele de Calculatoare,A107,asist. dr. ing. Radu Marin
+CTI 3B,0,marti,10:00,12:00,curs,ambele,Baze de Date,A202,prof. dr. ing. Elena Chiriac
+CTI 3B,0,marti,12:00,14:00,seminar,ambele,Baze de Date,A211,asist. dr. ing. Ioana Drăgan
+CTI 3B,1,marti,14:00,16:00,laborator,ambele,Baze de Date,A108,asist. dr. ing. Ioana Drăgan
+CTI 3B,2,marti,14:00,16:00,laborator,ambele,Sisteme de Operare,A109,șef lucr. dr. ing. Andrei Lupu
+CTI 3B,0,miercuri,10:00,12:00,curs,ambele,Sisteme de Operare,A201,conf. dr. ing. Mihai Petrescu
+CTI 3B,0,miercuri,12:00,14:00,curs,impar,Inteligență Artificială,A203,prof. dr. ing. Elena Chiriac
+CTI 3B,0,miercuri,12:00,14:00,curs,par,Ingineria Programării,A203,șef lucr. dr. ing. Cristina Barbu
+CTI 3B,1,joi,12:00,14:00,laborator,ambele,Inteligență Artificială,A110,asist. dr. ing. Radu Marin
+CTI 3B,2,joi,12:00,14:00,laborator,ambele,Ingineria Programării,A111,șef lucr. dr. ing. Cristina Barbu
+CTI 3B,0,joi,14:00,16:00,curs,ambele,Arhitectura Calculatoarelor,A202,conf. dr. ing. Mihai Petrescu
+CTI 3B,0,vineri,10:00,12:00,seminar,ambele,Arhitectura Calculatoarelor,A211,asist. dr. ing. Radu Marin
+AIA 2A,0,luni,08:00,10:00,curs,ambele,Electronică Digitală,B101,prof. dr. ing. Victor Anton
+AIA 2A,1,luni,10:00,12:00,laborator,ambele,Electronică Digitală,B12,asist. dr. ing. Sorin Tănase
+AIA 2A,2,luni,10:00,12:00,laborator,ambele,Electronică Digitală,B14,asist. dr. ing. Sorin Tănase
+AIA 2A,0,marti,08:00,10:00,curs,ambele,Analiză Matematică,B101,lect. dr. Ana Popescu
+AIA 2A,0,marti,10:00,12:00,seminar,ambele,Analiză Matematică,B102,lect. dr. Ana Popescu
+AIA 2A,0,miercuri,08:00,10:00,curs,ambele,Fizică,B101,conf. dr. Dan Ionescu
+AIA 2A,1,miercuri,10:00,12:00,laborator,impar,Fizică,B10,conf. dr. Dan Ionescu
+AIA 2A,2,miercuri,10:00,12:00,laborator,par,Fizică,B10,conf. dr. Dan Ionescu
+AIA 2A,0,joi,08:00,10:00,curs,ambele,Arhitectura Calculatoarelor,B102,conf. dr. ing. Mihai Petrescu
+AIA 2A,0,vineri,10:00,12:00,seminar,ambele,Electronică Digitală,B102,asist. dr. ing. Sorin Tănase

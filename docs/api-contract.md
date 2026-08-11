@@ -37,6 +37,32 @@ Prefix: `/api/v1`. Convențiile sunt fixate înainte de primul endpoint și nu s
 | GET | `/auth/me` | - | 200 cu `data: null` pentru anonimi |
 | PATCH | `/auth/me` | da | nume afișat, grupă, semigrupă |
 | DELETE | `/auth/me` | da | anonimizare, nu ștergere fizică; 204 |
+| GET | `/schedule` | - | orarul grupei; `?groupId=&subgroup=&termId=` sau contextul din sesiune |
+| GET | `/schedule/status` | - | ultima rulare și ultimele schimbări ale grupei |
+| POST | `/schedule/import` | admin | multipart, câmpul `file`, maxim 2 MB; 422 dacă sursa e goală |
+
+### `POST /schedule/import`
+
+Calea N0: merge fără niciun scraper. Răspunsul este raportul rulării.
+
+```json
+{
+  "data": {
+    "runId": 4, "status": "success",
+    "found": 40, "added": 1, "changed": 1, "removed": 2,
+    "unresolvedSubjects": ["Ingineria Programării"],
+    "errors": []
+  }
+}
+```
+
+`status` este `partial` când s-a importat, dar ceva merită citit: supapa de siguranță s-a declanșat,
+o grupă din fișier nu există, un slot apare de două ori. `failed` înseamnă că sursa nu a returnat
+nicio intrare și **nu s-a dezactivat nimic**.
+
+Supapa de siguranță: dacă peste 30% dintre sloturile active lipsesc din sursă, nimic nu se
+dezactivează, rularea se marchează `partial` și motivul intră în `errors`.
+
 ### `GET /config`
 
 ```json

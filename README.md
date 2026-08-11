@@ -21,6 +21,40 @@ dimineață: ce am acum, unde, și ce urmează.
 
 Ecranul principal al aplicației, „Acum", răspunde fix la ea.
 
+## Module
+
+### Orar
+
+Orarul grupei și al semigrupei tale, pe zile, cu interval orar, disciplină, tip de activitate,
+paritatea săptămânii, profesor și sală. Sala vine cu indicațiile pe care le scrie facultatea
+(„Corp A (DAIA), Etaj 1"), nu doar cu codul.
+
+Sub orar apare raportul ultimului import: ce adaptor a rulat, când, câte activități au fost citite,
+adăugate, modificate și scoase, plus ultimele schimbări care afectează grupa ta.
+
+### Import de orar
+
+Orarul nu se scrie de mână. Intră printr-un singur pipeline, cu adaptoare interschimbabile:
+
+| Adaptor | Sursă |
+|---|---|
+| `ManualAdapter` | CSV pus de un om |
+
+Tot ce vine după parsare este cod comun: normalizare fără diacritice, rezolvarea disciplinei și a
+sălii, diff în memorie, scriere, istoric, notificări. Un scraper automat ar fi doar un al treilea
+adaptor, fără nicio altă modificare.
+
+Cheia unui rând de orar este slotul (semestru, grupă, semigrupă, zi, oră de început, tip, paritate),
+iar disciplina, sala și profesorul sunt atribute. Diferența dintre ele de la o rulare la alta *este*
+detecția de modificări: fiecare import scrie ce s-a adăugat, ce s-a schimbat (cu valorile dinainte și
+de după) și ce a dispărut, apoi trimite o singură notificare per grupă per rulare.
+
+Există o supapă de siguranță: dacă peste 30% dintre sloturile active lipsesc din fișier, nimic nu se
+dezactivează, rularea se marchează ca parțială și motivul intră în raport. Fără ea, o sursă cu
+structura schimbată ar șterge orarul întregii facultăți la primul import.
+
+Adminul are un ecran de import pe pagina de orar: alege fișierul, îl încarcă și vede raportul pe loc.
+
 ## Roluri
 
 | Rol | Ce poate în plus |
