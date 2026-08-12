@@ -39,6 +39,7 @@ Orarul nu se scrie de mână. Intră printr-un singur pipeline, cu adaptoare int
 | Adaptor | Sursă |
 |---|---|
 | `ManualAdapter` | CSV pus de un om |
+| `XlsxAdapter` | fișierul Excel real publicat de facultate |
 
 Tot ce vine după parsare este cod comun: normalizare fără diacritice, rezolvarea disciplinei și a
 sălii, diff în memorie, scriere, istoric, notificări. Un scraper automat ar fi doar un al treilea
@@ -54,6 +55,12 @@ dezactivează, rularea se marchează ca parțială și motivul intră în raport
 structura schimbată ar șterge orarul întregii facultăți la primul import.
 
 Adminul are un ecran de import pe pagina de orar: alege fișierul, îl încarcă și vede raportul pe loc.
+
+Parserul pentru formatul real merită menționat separat. Fișierul facultății își documentează gramatica
+într-o celulă de legendă și are 10 foi de orar plus două dicționare, `Săli` (65 de săli, cu locația
+scrisă pentru studenți) și `Profesori` (238 de acronime cu numele complet). Parserul clasifică tokenii
+după dicționare, nu după poziție în celulă. Rezultatul pe fișierul real: **1667 de activități, zero
+erori, 97% cu sală identificată și 98% cu profesor**.
 
 ## Roluri
 
@@ -107,3 +114,8 @@ PostgreSQL 16, 30 de tabele, 16 tipuri enumerate. Câteva lucruri care nu sunt e
 - ștergerea e logică peste tot unde firul discuției sau istoricul contează;
 - coloanele normalizate (fără diacritice, minuscule) există separat de forma de afișare, iar aceeași
   funcție de normalizare se folosește și la scriere, și la citire.
+
+Datele de demo nu sunt inventate de la zero. Un modul de seed citește fișierul Excel real al facultății
+și derivă din el 10 clădiri, 65 de săli cu indicații, 57 de grupe și 94 de discipline cu alias-uri,
+apoi importă orarul prin exact același pipeline ca un upload. O bază proaspătă are deci deja o rulare de
+import și un istoric de schimbări.

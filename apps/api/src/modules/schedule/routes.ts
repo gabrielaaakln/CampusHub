@@ -8,6 +8,7 @@ import { requireRole } from '../../middleware/auth.js';
 import { importLimiter } from '../../middleware/rateLimit.js';
 import { valid, validate } from '../../middleware/validate.js';
 import { ManualAdapter } from './adapters/manual.js';
+import { XlsxAdapter } from './adapters/xlsx.js';
 import { runImport } from './importer.js';
 import { currentTerm, lastRun, recentChanges, termById, weekForGroup } from './service.js';
 
@@ -87,8 +88,12 @@ scheduleRouter.post(
   },
 );
 
+// the file the faculty publishes is xlsx a csv is the fallback a human can edit
 function adapterFor(file: Express.Multer.File) {
   const name = file.originalname.toLowerCase();
+  if (name.endsWith('.xlsx') || name.endsWith('.xlsm')) {
+    return XlsxAdapter.fromBuffer(file.buffer, file.originalname);
+  }
   if (name.endsWith('.csv')) return ManualAdapter.fromBuffer(file.buffer, file.originalname);
-  throw badRequest('Acceptăm doar fișiere .csv', { field: 'file' });
+  throw badRequest('Acceptăm doar fișiere .xlsx sau .csv', { field: 'file' });
 }

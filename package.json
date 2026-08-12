@@ -16,7 +16,9 @@
     "typecheck": "npm run build -w @campushub/shared && npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "test": "npm run test --workspaces --if-present",
-    "db:migrate": "npm run db:migrate -w @campushub/api"
+    "db:migrate": "npm run db:migrate -w @campushub/api",
+    "db:seed": "npm run db:seed -w @campushub/api",
+    "db:check": "npm run db:check -w @campushub/api"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

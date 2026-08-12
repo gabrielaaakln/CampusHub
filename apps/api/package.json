@@ -12,6 +12,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:test": "node scripts/migrate-test.mjs",
+    "db:seed": "tsx src/seed/index.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "cookie-parser": "^1.4.7",
     "csrf-csrf": "^4.0.1",
     "dotenv": "^16.6.1",
+    "exceljs": "^4.4.0",
     "express": "^5.0.1",
     "express-rate-limit": "^8.6.2",
     "express-session": "^1.18.1",
