@@ -62,6 +62,17 @@ scrisă pentru studenți) și `Profesori` (238 de acronime cu numele complet). P
 după dicționare, nu după poziție în celulă. Rezultatul pe fișierul real: **1667 de activități, zero
 erori, 97% cu sală identificată și 98% cu profesor**.
 
+### Profil și cont
+
+Nume afișat, grupă aleasă dintr-o listă reală și semigrupă limitată la câte are grupa respectivă.
+
+Ștergerea contului e anonimizare, nu ștergere fizică: numele devine „Utilizator șters", adresa e
+înlocuită cu o valoare fără valoare de contact, parola se șterge, iar legătura cu identitatea
+instituțională dispare, ca următoarea autentificare să nu reintre în contul șters. Postările rămân
+fără autor, ca discuțiile să nu se rupă. Efectul e imediat și nu cere cerere prin email.
+
+Există și o pagină de informare privind prelucrarea datelor, accesibilă din subsol.
+
 ## Roluri
 
 | Rol | Ce poate în plus |
@@ -103,6 +114,25 @@ Starea din producție, la data scrierii:
 
 Regula după care se aprind: un flag pornit e o promisiune către frontend. Dacă endpointul din spate nu
 există, flagul stă stins.
+
+## Interfața
+
+Sistemul vizual e unul tipografic internațional, în stil Swiss Grid: paletă acromatică, linii de un
+pixel, colțuri drepte, fără umbre, un singur font (Space Grotesk) servit din aplicație. Există ambele
+teme, deschisă și închisă, cu buton de comutare în bară; implicit se ia preferința sistemului, iar
+alegerea utilizatorului se reține.
+
+Paleta nu are culori de stare, deci singurul accent tare e inversarea, iar ea se cheltuie pe elementul
+activ din meniu. Cardurile care trebuie scoase în față primesc un fond mai închis, nu o culoare: un
+bloc negru pe jumătate de ecran, două ore pe zi, arată ca o eroare, nu ca un accent.
+
+Sub 900px coloana de navigație devine sertar care intră din dreapta, cu buton în colț. Se închide la
+Escape, la atingerea zonei umbrite și la orice schimbare de rută. Pentru utilizatorii care au cerut
+mișcare redusă, sertarul se estompează pe loc în loc să alunece; indicatorul de încărcare continuă
+totuși să se rotească, pentru că el e feedback, nu decor.
+
+Harta rămâne în culorile ei. Dalele OpenStreetMap sunt informație, iar trecerea lor în tonuri de gri a
+fost încercată și respinsă.
 
 ## Datele
 

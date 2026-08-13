@@ -11,8 +11,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm run build -w @campushub/shared && npm run build -w @campushub/api",
-    "dev": "npm run dev -w @campushub/api",
+    "build": "npm run build -w @campushub/shared && npm run build -w @campushub/api && npm run build -w @campushub/web",
+    "dev": "concurrently -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm run dev -w @campushub/api",
+    "dev:web": "npm run dev -w @campushub/web",
     "typecheck": "npm run build -w @campushub/shared && npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "test": "npm run test --workspaces --if-present",

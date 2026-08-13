@@ -1,0 +1,1068 @@
+/* swiss grid design system see design/DESIGN md
+   achromatic tokens 1px hairlines zero radius space grotesk everywhere */
+
+:root {
+  --surface: #fbf9f9;
+  --surface-lowest: #ffffff;
+  --surface-low: #f5f3f3;
+  --surface-container: #efeded;
+  --surface-high: #e9e8e7;
+  --surface-highest: #e3e2e2;
+  --dim: #dbdad9;
+  --ink: #1b1c1c;
+  --ink-muted: #4c4546;
+  --outline: #7e7576;
+  --line: #000000;
+  --rule: #cfc4c5;
+  --primary: #000000;
+  --on-primary: #ffffff;
+  --error: #ba1a1a;
+  color-scheme: light;
+}
+
+/* obsidian grid the dark half of the same system */
+:root[data-theme='dark'] {
+  --surface: #131313;
+  --surface-lowest: #0e0e0e;
+  --surface-low: #1c1b1b;
+  --surface-container: #201f1f;
+  --surface-high: #2a2a2a;
+  --surface-highest: #353534;
+  --dim: #2a2a2a;
+  --ink: #e5e2e1;
+  --ink-muted: #c4c7c8;
+  --outline: #8e9192;
+  --line: #3a3a3b;
+  --rule: #2a2a2a;
+  --primary: #ffffff;
+  --on-primary: #1b1b1b;
+  --error: #ffb4ab;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --surface: #131313;
+    --surface-lowest: #0e0e0e;
+    --surface-low: #1c1b1b;
+    --surface-container: #201f1f;
+    --surface-high: #2a2a2a;
+    --surface-highest: #353534;
+    --dim: #2a2a2a;
+    --ink: #e5e2e1;
+    --ink-muted: #c4c7c8;
+    --outline: #8e9192;
+    --line: #3a3a3b;
+    --rule: #2a2a2a;
+    --primary: #ffffff;
+    --on-primary: #1b1b1b;
+    --error: #ffb4ab;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font: 400 15px/1.55 'Space Grotesk', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ---------- type roles ---------- */
+
+.label,
+.rail a,
+.form label,
+button,
+.button,
+.chip,
+.badge,
+.pager span {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hint {
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.error {
+  color: var(--error);
+  margin: 0;
+}
+
+/* ---------- shell ---------- */
+
+.shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
+  padding: 8px 16px;
+  background: var(--surface-container);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.brand b {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.brand span {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+@media (max-width: 760px) {
+  .brand span {
+    display: none;
+  }
+}
+
+.topsearch {
+  flex: 1;
+  max-width: 420px;
+}
+
+.topsearch input {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--surface-lowest);
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.account .who {
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  text-decoration: none;
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account .who:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.frame {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+}
+
+.rail {
+  border-right: 1px solid var(--line);
+  background: var(--surface-low);
+}
+
+/* the rail itself stretches so its rule runs the whole page the nav inside sticks */
+.rail nav {
+  position: sticky;
+  top: 57px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  min-height: calc(100dvh - 57px);
+  max-height: calc(100dvh - 57px);
+  overflow-y: auto;
+}
+
+.rail-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+
+.rail a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  color: var(--ink-muted);
+}
+
+.rail a:hover {
+  border-color: var(--line);
+  background: var(--surface-high);
+  color: var(--ink);
+}
+
+.rail a.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+main {
+  min-width: 0;
+  padding: 32px 32px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stack {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding-bottom: 48px;
+  display: grid;
+  gap: 24px;
+  align-content: start;
+}
+
+.foot {
+  width: 100%;
+  max-width: 1080px;
+  margin-top: auto;
+  margin-inline: auto;
+  padding: 24px 0;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px 24px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.foot nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.foot a {
+  color: var(--ink-muted);
+  text-decoration: none;
+}
+
+.foot a:hover {
+  color: var(--ink);
+}
+
+/* the drawer the trigger and the scrim exist only under 900px on desktop the rail never moves */
+.rail-brand,
+.topbar button.menu-toggle,
+.frame button.scrim,
+.signout svg {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .frame {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* the bar stays one row of 56px so the drawer can start right under it at any scroll */
+  .topbar {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .topbar .brand {
+    display: none;
+  }
+
+  /* the account hands its buttons to the bar itself so each one can pick its own side */
+  .account {
+    display: contents;
+  }
+
+  .account .who {
+    display: none;
+  }
+
+  .topbar button.signout,
+  .account .button.primary {
+    order: -3;
+  }
+
+  .account button.icon {
+    order: -2;
+  }
+
+  .account .bell {
+    order: 1;
+  }
+
+  .topbar button.menu-toggle {
+    display: inline-flex;
+    order: 2;
+  }
+
+  /* two square buttons on each side leave the search box centred */
+  .topbar button.signout {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .topbar button.signout span {
+    display: none;
+  }
+
+  .topbar button.signout svg {
+    display: block;
+  }
+
+  .topsearch {
+    min-width: 0;
+    max-width: none;
+  }
+
+  .rail {
+    position: fixed;
+    top: 56px;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    width: min(280px, 82vw);
+    border-right: 0;
+    border-left: 1px solid var(--line);
+    /* hidden keeps the closed drawer out of the tab order and still lets it slide out */
+    visibility: hidden;
+    transform: translateX(100%);
+    transition: transform 260ms cubic-bezier(0.2, 0, 0, 1), visibility 260ms;
+  }
+
+  .rail.open {
+    visibility: visible;
+    transform: translateX(0);
+  }
+
+  .rail nav {
+    position: static;
+    min-height: 100%;
+    max-height: 100%;
+  }
+
+  .rail-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 0 12px 14px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .rail-brand span {
+    display: block;
+  }
+
+  .frame button.scrim {
+    display: block;
+    position: fixed;
+    inset: 56px 0 0;
+    z-index: 50;
+    padding: 0;
+    border: 0;
+    background: rgb(0 0 0 / 0.45);
+    /* it mounts already open so the fade has to be an animation not a transition */
+    animation: scrim-in 260ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .frame button.scrim:hover {
+    background: rgb(0 0 0 / 0.45);
+  }
+
+  body.menu-open {
+    overflow: hidden;
+  }
+
+  main {
+    padding: 20px 16px 0;
+  }
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 560px) {
+  .account .who {
+    display: none;
+  }
+
+  .page-head p {
+    font-size: 15px;
+  }
+
+  .panel-body {
+    padding: 12px;
+  }
+}
+
+/* ---------- page head ---------- */
+
+.page-head {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 16px;
+}
+
+.page-head h1 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 48px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+
+.page-head.md h1 {
+  font-size: clamp(24px, 3vw, 28px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+.page-head p {
+  margin: 12px 0 0;
+  max-width: 68ch;
+  font-size: 16px;
+  color: var(--ink-muted);
+}
+
+.page-head .label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--ink-muted);
+}
+
+.page-head .back {
+  margin: 0 0 12px;
+}
+
+/* ---------- panels ---------- */
+
+.panel {
+  border: 1px solid var(--line);
+  background: var(--surface-lowest);
+}
+
+.panel.filled {
+  background: var(--surface-container);
+}
+
+/* inversion is the only emphasis this palette has so it is spent on what happens now */
+.panel.inverted {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.panel.inverted .panel-head,
+.panel.inverted .meta,
+.panel.inverted .meta > div {
+  border-color: color-mix(in srgb, var(--on-primary) 35%, transparent);
+}
+
+.panel.inverted .hint,
+.panel.inverted .label,
+.panel.inverted .facts dt,
+.panel.inverted small {
+  color: color-mix(in srgb, var(--on-primary) 70%, transparent);
+}
+
+/* .badge.solid carries the same weight so it has to be named or it wins by coming later */
+.panel.inverted .badge,
+.panel.inverted .badge.solid,
+.panel.inverted .button,
+.panel.inverted button {
+  background: var(--on-primary);
+  border-color: var(--on-primary);
+  color: var(--primary);
+}
+
+.panel.bare {
+  border: 0;
+  background: none;
+}
+
+.panel.bare .panel-head {
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.panel.bare .panel-body {
+  padding: 12px 0 0;
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.panel-head .hint {
+  font-size: 14px;
+}
+
+.panel-body {
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.panel-body > * {
+  margin: 0;
+}
+
+.panel-body h3 {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+/* the bento shares one hairline between neighbours instead of stacking two */
+.bento {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+.bento > :nth-child(1) {
+  margin-right: -1px;
+}
+
+.bento > :nth-child(3) {
+  grid-column: 1 / -1;
+  margin-top: -1px;
+}
+
+@media (max-width: 900px) {
+  .bento {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bento > :nth-child(1) {
+    margin: 0 0 -1px;
+  }
+
+  .bento > :nth-child(3) {
+    margin-top: -1px;
+  }
+}
+
+/* ---------- controls ---------- */
+
+button,
+.button {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--surface-lowest);
+  color: var(--ink);
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 120ms linear, color 120ms linear;
+}
+
+button:hover:not(:disabled),
+.button:hover {
+  background: var(--surface-high);
+}
+
+button.primary,
+.button.primary,
+button[type='submit'] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+button.primary:hover:not(:disabled),
+.button.primary:hover,
+button[type='submit']:hover:not(:disabled) {
+  background: var(--ink-muted);
+  border-color: var(--ink-muted);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* in a filter row the pressed chip is the disabled one so it inverts instead of fading */
+.chip:disabled {
+  opacity: 1;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+/* ghost action inside a row of text stays text */
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 14px;
+  text-decoration: underline;
+}
+
+.link:hover:not(:disabled) {
+  background: none;
+  color: var(--ink);
+}
+
+button.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+}
+
+input,
+textarea,
+select {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--surface-lowest);
+  color: var(--ink);
+  font: 400 15px/1.5 'Space Grotesk', system-ui, sans-serif;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--outline);
+}
+
+/* the browser autofill paints its own blue box which breaks the achromatic palette */
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink);
+  box-shadow: 0 0 0 1000px var(--surface-lowest) inset;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+  max-width: 520px;
+}
+
+.form label {
+  display: grid;
+  gap: 6px;
+  color: var(--ink-muted);
+}
+
+.form label input,
+.form label textarea,
+.form label select {
+  font-size: 15px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+}
+
+/* the file input is the one control the browser paints itself so the real one is hidden
+   behind a label and the chosen name is written next to it */
+.file-field {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.file-field label {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.file-field label input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.file-field:focus-within label {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.filters,
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.pager span {
+  color: var(--ink-muted);
+}
+
+.search {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* ---------- lists ---------- */
+
+.entries,
+.posts,
+.results,
+.notifications,
+.changes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.entries > li,
+.posts > li,
+.notifications > li {
+  display: grid;
+  gap: 4px 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.entries > li:first-child,
+.posts > li:first-child,
+.notifications > li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.entries > li {
+  grid-template-columns: 132px minmax(0, 1fr) max-content;
+  align-items: baseline;
+}
+
+.entries .hours {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.entries .what,
+.entries .where {
+  display: grid;
+  gap: 2px;
+}
+
+.entries .where {
+  text-align: right;
+}
+
+.entries strong {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.entries small,
+.posts small,
+.notifications small,
+.results small {
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+.posts > li,
+.notifications > li {
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: start;
+}
+
+.posts > li > .votes {
+  grid-row: 1 / 3;
+}
+
+.posts > li:has(> .votes) {
+  grid-template-columns: max-content minmax(0, 1fr);
+}
+
+.posts strong {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.posts a {
+  text-decoration: none;
+}
+
+.posts a:hover {
+  text-decoration: underline;
+}
+
+.posts small {
+  display: block;
+  margin-top: 4px;
+}
+
+.posts .label {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.posts .actions,
+.notifications .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.notifications li.read {
+  color: var(--ink-muted);
+}
+
+.notifications li.unread > div:first-child {
+  border-left: 3px solid var(--primary);
+  padding-left: 12px;
+}
+
+.notifications p {
+  margin: 4px 0 0;
+}
+
+.results > li + li {
+  border-top: 1px solid var(--rule);
+}
+
+.results button {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 12px;
+  border: 0;
+  background: none;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 15px;
+}
+
+.results button strong {
+  font-size: 16px;
+  letter-spacing: 0.02em;
+}
+
+.results button:hover {
+  background: var(--surface-high);
+}
+
+.changes {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+
+/* ---------- boot and empty states ---------- */
+
+.boot {
+  max-width: 520px;
+  margin: 96px auto;
+  padding: 24px;
+  border: 1px solid var(--line);
+  text-align: center;
+  color: var(--ink-muted);
+}
+
+.boot-loading {
+  min-height: 80dvh;
+  display: grid;
+  place-items: center;
+}
+
+.spinner-container {
+  width: 150px;
+  height: 150px;
+  position: relative;
+  margin: 30px auto;
+  overflow: hidden;
+}
+
+.spinner {
+  position: absolute;
+  width: calc(100% - 9.9px);
+  height: calc(100% - 9.9px);
+  border: 5px solid transparent;
+  border-radius: 50%;
+  border-top-color: var(--primary);
+  animation: spin 1.4s cubic-bezier(0.17, 0.49, 0.96, 0.79) infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* the loader is the one round thing in the system so it says nothing else has to be */
+.spinner-container.sm {
+  width: 44px;
+  height: 44px;
+  margin: 8px 0;
+}
+
+.spinner-container.sm .spinner {
+  border-width: 3px;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+}
+
+.empty {
+  margin: 0;
+  padding: 24px 0;
+  color: var(--ink-muted);
+  font-size: 16px;
+}
+
+@media (max-width: 640px) {
+  .entries > li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .entries .where {
+    text-align: left;
+  }
+
+  .posts > li,
+  .notifications > li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .posts .actions,
+  .notifications .actions {
+    justify-content: flex-start;
+  }
+}
+
+/* the loader is feedback not decoration so it keeps turning it only loses the easing */
+@media (prefers-reduced-motion: reduce) {
+  *:not(.spinner):not(.rail):not(.scrim) {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .spinner {
+    animation: spin 2s linear infinite;
+  }
+}
+
+/* reduced is not absent a panel that appears out of nowhere is harder to follow than one that
+   fades so the drawer trades the slide across the screen for a fade in place */
+@media (prefers-reduced-motion: reduce) and (max-width: 900px) {
+  .rail {
+    opacity: 0;
+    transition: opacity 140ms linear, visibility 140ms;
+  }
+
+  .rail.open {
+    opacity: 1;
+  }
+
+  .frame button.scrim {
+    animation-duration: 140ms;
+  }
+}

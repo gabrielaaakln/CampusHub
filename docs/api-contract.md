@@ -40,6 +40,8 @@ Prefix: `/api/v1`. Convențiile sunt fixate înainte de primul endpoint și nu s
 | GET | `/schedule` | - | orarul grupei; `?groupId=&subgroup=&termId=` sau contextul din sesiune |
 | GET | `/schedule/status` | - | ultima rulare și ultimele schimbări ale grupei |
 | POST | `/schedule/import` | admin | multipart, câmpul `file`, maxim 2 MB; 422 dacă sursa e goală |
+| GET | `/groups?studyYear=&q=` | - | grupele facultății, pentru profil |
+| GET | `/subjects` | - | disciplinele facultății, pentru termene |
 
 ### `POST /schedule/import`
 
