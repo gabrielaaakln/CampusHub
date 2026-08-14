@@ -16,6 +16,7 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { to: '/orar', label: 'Orar', icon: 'orar' },
+  { to: '/harta', label: 'Hartă', icon: 'harta' },
 ];
 
 // what you do about the account rather than what you read sits together at the foot of the rail

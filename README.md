@@ -62,6 +62,25 @@ scrisă pentru studenți) și `Profesori` (238 de acronime cu numele complet). P
 după dicționare, nu după poziție în celulă. Rezultatul pe fișierul real: **1667 de activități, zero
 erori, 97% cu sală identificată și 98% cu profesor**.
 
+### Hartă
+
+Cele 10 clădiri ale campusului, cu pini pe hartă OpenStreetMap. Coordonatele nu sunt estimate: vin din
+conturul real al clădirilor, iar pinul e punctul cel mai adânc din interiorul poligonului, verificat
+cu point-in-polygon pentru fiecare corp. La clădirile în formă de U sau L centroidul ar fi căzut în
+curte. Acolo unde se poate deduce o fațadă, harta știe și intrarea.
+
+Căutarea de sală tolerează greșeli de scriere și lipsa diacriticelor, și merge pe două căi:
+
+- după codul sălii, ignorând separatorii, deci `ac17` găsește `AC1-7`;
+- după alias, deci `lab retele` găsește sala în care se ține efectiv laboratorul de rețele.
+
+Alias-urile nu sunt inventate. Sunt derivate din activitățile care se țin în fiecare sală, așa cum
+apar în orarul real: 80 de alias-uri generate automat.
+
+Rezultatul deschide fișa sălii: clădire, etaj, indicații text, tip de sală și orele care se țin acolo
+săptămâna aceasta. Sala selectată stă în URL, deci butonul „Arată sala pe hartă" din alte ecrane duce
+direct acolo.
+
 ### Profil și cont
 
 Nume afișat, grupă aleasă dintr-o listă reală și semigrupă limitată la câte are grupa respectivă.

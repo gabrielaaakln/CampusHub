@@ -4,4 +4,5 @@ export * from './config.js';
 export * from './auth.js';
 export * from './normalize.js';
 export * from './schedule.js';
+export * from './map.js';
 export * from './catalog.js';

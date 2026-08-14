@@ -4,6 +4,7 @@ import { useFeature } from './lib/useAppConfig.js';
 import { LoginPage } from './pages/LoginPage.js';
 import { RegisterPage } from './pages/RegisterPage.js';
 import { SchedulePage } from './pages/SchedulePage.js';
+import { MapPage } from './pages/MapPage.js';
 import { ProfilePage } from './pages/ProfilePage.js';
 import { NotFoundPage } from './pages/NotFoundPage.js';
 
@@ -22,6 +23,7 @@ export function App() {
           element={registration ? <RegisterPage /> : <Navigate to="/intra" replace />}
         />
         <Route path="orar" element={<SchedulePage />} />
+        <Route path="harta" element={<MapPage />} />
         <Route path="profil" element={<ProfilePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

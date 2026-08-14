@@ -40,6 +40,11 @@ Prefix: `/api/v1`. Convențiile sunt fixate înainte de primul endpoint și nu s
 | GET | `/schedule` | - | orarul grupei; `?groupId=&subgroup=&termId=` sau contextul din sesiune |
 | GET | `/schedule/status` | - | ultima rulare și ultimele schimbări ale grupei |
 | POST | `/schedule/import` | admin | multipart, câmpul `file`, maxim 2 MB; 422 dacă sursa e goală |
+| GET | `/buildings` | - | clădirile facultății, cu numărul de etaje și de săli |
+| GET | `/buildings/:id/floors` | - | etajele unei clădiri; `svgUrl` doar cu flag-ul `floorplans` |
+| GET | `/floors/:id/rooms` | - | sălile unui etaj |
+| GET | `/rooms/search?q=&limit=` | - | fuzzy pe numărul sălii **și** pe alias-uri; maxim 50 |
+| GET | `/rooms/:id` | - | fișa sălii plus orele care se țin în ea săptămâna aceasta |
 | GET | `/groups?studyYear=&q=` | - | grupele facultății, pentru profil |
 | GET | `/subjects` | - | disciplinele facultății, pentru termene |
 
@@ -64,6 +69,27 @@ nicio intrare și **nu s-a dezactivat nimic**.
 
 Supapa de siguranță: dacă peste 30% dintre sloturile active lipsesc din sursă, nimic nu se
 dezactivează, rularea se marchează `partial` și motivul intră în `errors`.
+
+### `GET /rooms/search`
+
+Caută fără diacritice și cu greșeli de scriere. Numărul sălii se compară fără separatori
+(`ac17` găsește `AC1-7`), alias-urile se compară cu spații (`lab retele` găsește sala în care se
+ține laboratorul de rețele). Un rezultat gol este `{ "data": [] }`, nu o eroare.
+
+```json
+{ "data": [ {
+  "id": 45, "number": "A1-13", "roomType": "laborator", "capacity": null,
+  "directions": "Corp A (DAIA), Etaj 1",
+  "notes": null, "aliases": ["lab Sisteme cu evenimente discrete"],
+  "floor": { "id": 18, "level": 1, "label": "Etaj 1" },
+  "building": { "id": 7, "name": "Corp A (DAIA)", "code": "A", "address": "...",
+                "latitude": 47.15598, "longitude": 27.60191,
+                "entranceLat": 47.15586, "entranceLng": 27.60178 }
+} ] }
+```
+
+`svgElementId` apare doar când flag-ul `floorplans` e pornit. Alias-urile sunt reale, nu inventate:
+sunt derivate din laboratoarele care se țin efectiv în sala respectivă.
 
 ### `GET /config`
 

@@ -3,6 +3,7 @@ import { healthRouter } from './modules/health/routes.js';
 import { configRouter } from './modules/config/routes.js';
 import { authRouter } from './modules/auth/routes.js';
 import { scheduleRouter } from './modules/schedule/routes.js';
+import { mapRouter } from './modules/map/routes.js';
 import { catalogRouter } from './modules/catalog/routes.js';
 import { doubleCsrfProtection, generateCsrfToken } from './middleware/csrf.js';
 
@@ -31,4 +32,5 @@ apiRouter.use(doubleCsrfProtection);
 
 apiRouter.use(authRouter);
 apiRouter.use(scheduleRouter);
+apiRouter.use(mapRouter);
 apiRouter.use(catalogRouter);
