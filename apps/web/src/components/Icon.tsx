@@ -3,6 +3,8 @@ import type { ReactElement } from 'react';
 export type IconName =
   | 'orar'
   | 'harta'
+  | 'forum'
+  | 'notificari'
   | 'setari'
   | 'theme'
   | 'meniu'
@@ -22,6 +24,18 @@ const PATHS: Record<IconName, ReactElement> = {
       <path d="M2.5 4.5 7.5 2.5v13l-5 2z" />
       <path d="M7.5 2.5 12.5 4.5v13l-5-2z" />
       <path d="M12.5 4.5 17.5 2.5v13l-5 2z" />
+    </>
+  ),
+  forum: (
+    <>
+      <path d="M2.5 3.5h11v8h-7l-4 3z" />
+      <path d="M6.5 15.5h7l4 3v-11h-3" />
+    </>
+  ),
+  notificari: (
+    <>
+      <rect x="2.5" y="4.5" width="15" height="11" />
+      <path d="m2.5 4.5 7.5 6 7.5-6" />
     </>
   ),
   setari: (

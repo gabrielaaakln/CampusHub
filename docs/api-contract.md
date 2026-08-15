@@ -45,6 +45,19 @@ Prefix: `/api/v1`. Convențiile sunt fixate înainte de primul endpoint și nu s
 | GET | `/floors/:id/rooms` | - | sălile unui etaj |
 | GET | `/rooms/search?q=&limit=` | - | fuzzy pe numărul sălii **și** pe alias-uri; maxim 50 |
 | GET | `/rooms/:id` | - | fișa sălii plus orele care se țin în ea săptămâna aceasta |
+| GET | `/notifications?page=&limit=&unread=` | da | `meta` are în plus `unread` |
+| PATCH | `/notifications/:id/read` | da | 204; 404 dacă notificarea e a altcuiva |
+| PATCH | `/notifications/read-all` | da | `{ data: { marked } }` |
+| GET | `/forum/categories` | - | cu numărul de postări |
+| GET | `/forum/posts?sort=new\|top&categoryId=&subjectId=&q=&page=` | - | `myVote` e 0 pentru anonimi |
+| POST | `/forum/posts` | da | 201 cu postarea creată |
+| GET | `/forum/posts/:id` | - | — |
+| DELETE | `/forum/posts/:id` | autor sau moderator | ștergere logică, 204 |
+| GET | `/forum/posts/:id/comments` | - | listă plată cu `parentCommentId` și `depth`; arborele se face în ecran |
+| POST | `/forum/posts/:id/comments` | da | 201 cu lista completă; `parentCommentId` pentru răspuns, `depth` maxim 5 |
+| POST | `/forum/posts/:id/vote` · `/forum/comments/:id/vote` | da | `{ value: 1 \| -1 \| 0 }`, 0 șterge votul |
+| DELETE | `/forum/comments/:id` | autor sau moderator | ștergere logică, 204 |
+| POST | `/reports` | da | 201; 409 dacă ai raportat deja, 400 pe propriul conținut |
 | GET | `/groups?studyYear=&q=` | - | grupele facultății, pentru profil |
 | GET | `/subjects` | - | disciplinele facultății, pentru termene |
 
@@ -90,6 +103,35 @@ Caută fără diacritice și cu greșeli de scriere. Numărul sălii se compară
 
 `svgElementId` apare doar când flag-ul `floorplans` e pornit. Alias-urile sunt reale, nu inventate:
 sunt derivate din laboratoarele care se țin efectiv în sala respectivă.
+
+### Forum și anunțuri: ce nu se trimite niciodată
+
+**Adresa de email nu apare în niciun răspuns**, nici măcar pentru moderatori. Autorul e
+`{ id, displayName, groupName }`. Contactul dintre studenți trece prin `POST /listings/:id/requests`:
+autorul anunțului primește o notificare, iar cele două persoane se înțeleg din aplicație.
+
+Un cont anonimizat apare peste tot ca „Utilizator șters”, cu grupa golită. O postare sau un
+comentariu șters logic își păstrează locul, ca firul discuției să nu se rupă.
+
+Voturile: `{ value: 1 | -1 | 0 }`. Zero **șterge rândul**, pentru că scorul e întreținut de un
+trigger care face `SUM` peste `post_votes`. Răspunsul întoarce scorul recitit din bază, nu unul
+calculat în aplicație.
+
+### `GET /notifications`
+
+N0 e polling: frontend-ul cere lista la 60 de secunde (`refetchInterval`, o linie). `meta.unread`
+alimentează badge-ul din antet, deci un singur apel ține și lista, și numărul.
+
+```json
+{ "data": [ { "id": 12, "type": "schedule_changed",
+              "title": "Orarul grupei tale s-a schimbat",
+              "body": "2 ore noi, 1 modificată", "link": "/orar",
+              "isRead": false, "createdAt": "2026-08-05T21:30:00.000Z" } ],
+  "meta": { "page": 1, "limit": 20, "total": 3, "has_next": false, "unread": 2 } }
+```
+
+Tipurile emise acum: `schedule_changed` (importerul, o notificare per grupă per rulare),
+`listing_request`, `listing_request_answered` și `content_removed` (moderatorul a șters ceva).
 
 ### `GET /config`
 

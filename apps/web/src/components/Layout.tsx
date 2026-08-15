@@ -3,6 +3,7 @@ import { NavLink, Outlet, Link, useLocation, useNavigate } from 'react-router';
 import type { FeatureKey } from '@campushub/shared';
 import { Icon, type IconName } from './Icon.js';
 import { useAppConfig } from '../lib/useAppConfig.js';
+import { useUnreadCount } from '../lib/useNotifications.js';
 import { useLogout, useSession } from '../lib/useSession.js';
 import { useTheme } from '../lib/useTheme.js';
 
@@ -17,6 +18,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { to: '/orar', label: 'Orar', icon: 'orar' },
   { to: '/harta', label: 'Hartă', icon: 'harta' },
+  { to: '/forum', label: 'Forum', icon: 'forum' },
 ];
 
 // what you do about the account rather than what you read sits together at the foot of the rail
@@ -28,6 +30,7 @@ export function Layout() {
   const { faculty, features } = useAppConfig();
   const { user } = useSession();
   const logout = useLogout();
+  const unread = useUnreadCount();
   const { theme, toggle } = useTheme();
   const { pathname } = useLocation();
   const [menu, setMenu] = useState(false);
@@ -74,6 +77,10 @@ export function Layout() {
           </button>
           {user ? (
             <>
+              <Link to="/notificari" className="bell" aria-label="Notificări">
+                <Icon name="notificari" size={16} />
+                {unread > 0 ? <span className="count">{unread > 9 ? '9+' : unread}</span> : null}
+              </Link>
               <Link to="/profil" className="who">
                 {user.displayName}
               </Link>

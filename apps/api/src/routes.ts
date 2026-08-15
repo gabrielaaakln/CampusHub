@@ -4,6 +4,9 @@ import { configRouter } from './modules/config/routes.js';
 import { authRouter } from './modules/auth/routes.js';
 import { scheduleRouter } from './modules/schedule/routes.js';
 import { mapRouter } from './modules/map/routes.js';
+import { notificationsRouter } from './modules/notifications/routes.js';
+import { forumRouter } from './modules/forum/routes.js';
+import { moderationRouter } from './modules/moderation/routes.js';
 import { catalogRouter } from './modules/catalog/routes.js';
 import { doubleCsrfProtection, generateCsrfToken } from './middleware/csrf.js';
 
@@ -33,4 +36,7 @@ apiRouter.use(doubleCsrfProtection);
 apiRouter.use(authRouter);
 apiRouter.use(scheduleRouter);
 apiRouter.use(mapRouter);
+apiRouter.use(notificationsRouter);
+apiRouter.use(forumRouter);
+apiRouter.use(moderationRouter);
 apiRouter.use(catalogRouter);

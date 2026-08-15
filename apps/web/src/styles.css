@@ -1085,6 +1085,127 @@ input:-webkit-autofill:focus {
   max-width: 72ch;
 }
 
+/* ---------- post lead and comment thread ---------- */
+
+.lead-row {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.lead-main {
+  display: grid;
+  gap: 8px;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 16px;
+  margin: 0;
+}
+
+.thread {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.thread .thread {
+  margin-left: 20px;
+  padding-left: 16px;
+  border-left: 1px solid var(--rule);
+}
+
+.thread > li {
+  padding: 12px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.thread > li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.thread .thread > li:first-child {
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+}
+
+.comment {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.comment small {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+.comment .filters {
+  margin-top: 8px;
+}
+
+.votes {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 2px;
+  min-width: 40px;
+  font-variant-numeric: tabular-nums;
+}
+
+.votes button {
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.votes button.on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.votes strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.bell .count {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  min-width: 16px;
+  height: 14px;
+  padding: 0 3px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+}
+
 /* ---------- map ---------- */
 
 .map-holder {

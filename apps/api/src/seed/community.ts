@@ -48,6 +48,12 @@ export async function seedCommunity({ facultyId, groupIds, roomIds }: Ids) {
   ]);
   const group = (i: number) => groupIds[i % groupIds.length]!;
 
+  // the acronyms come from the real timetable a post about transport gets no subject at all
+  const byShortName = await prisma.subject
+    .findMany({ where: { facultyId }, select: { id: true, shortName: true } })
+    .then((rows) => new Map(rows.flatMap((r) => (r.shortName ? [[r.shortName, r.id] as const] : []))));
+  const subjectOf = (short: string | null) => (short ? (byShortName.get(short) ?? null) : null);
+
   const people: {
     name: string;
     email: string;
@@ -100,8 +106,155 @@ export async function seedCommunity({ facultyId, groupIds, roomIds }: Ids) {
       }),
     ),
   );
+  const author = (i: number) => users[i % users.length]!.id;
+
+  const categories = await Promise.all(
+    [
+      { name: 'Anul 1', slug: 'anul-1', description: 'Întrebările de început, fără rușine.' },
+      { name: 'Cursuri și laboratoare', slug: 'cursuri', description: 'Materiale, teme, laboratoare.' },
+      { name: 'Examene și sesiune', slug: 'sesiune', description: 'Cum arată examenele, ce se cere.' },
+      { name: 'Cămin și cazare', slug: 'camin', description: 'Cămine, chirii, colegi de cameră.' },
+      { name: 'Timp liber', slug: 'timp-liber', description: 'Sport, concerte, ieșiri.' },
+    ].map((c, i) => prisma.forumCategory.create({ data: { facultyId, position: i, ...c } })),
+  );
+  const category = (i: number) => categories[i % categories.length]!.id;
+
+  const posts: [string, string, string | null][] = [
+    [
+      'Unde se ține laboratorul de rețele?',
+      'Am găsit doar „A1-13” în orar. E la etajul 1 în Corp A (DAIA).',
+      'SD3',
+    ],
+    [
+      'Ce laptop îmi trebuie în anul 1?',
+      'Orice mașină cu 8 GB RAM duce tot ce facem. Nu cumpărați nimic în prima lună.',
+      null,
+    ],
+    [
+      'Cum se punctează proiectul la Baze de Date?',
+      'Proiect 40%, laborator 20%, examen 40%. Se pot lua puncte în plus pe optimizări.',
+      'BD',
+    ],
+    [
+      'Se poate schimba semigrupa?',
+      'Da, la secretariat în primele două săptămâni, dacă există loc în cealaltă semigrupă.',
+      null,
+    ],
+    [
+      'Materiale pentru Sisteme de Operare',
+      'Cursul e suficient pentru examen, dar laboratorul cere citit despre procese și semafoare.',
+      'SO',
+    ],
+    [
+      'Cine mai dă Metode numerice în toamnă?',
+      'Se adună un grup de învățat în bibliotecă, în Corp AC, marți și joi de la 16.',
+      'MN',
+    ],
+    [
+      'Cămin sau chirie în anul 1?',
+      'Căminul e mai ieftin și ești lângă cursuri. Chiria dă liniște, dar te muți mai greu.',
+      null,
+    ],
+    [
+      'Cât durează să iei permisul în Iași?',
+      'În medie două luni, dacă prinzi programare repede la școala de șoferi.',
+      null,
+    ],
+    [
+      'Recomandări de opționale în anul 3',
+      'Ingineria Programării ajută cel mai mult la primul interviu.',
+      'IP',
+    ],
+    ['Se cere prezența la cursuri?', 'La curs, rar. La laborator, da, și se recuperează greu.', null],
+    [
+      'Ce fac dacă pierd o lucrare de laborator?',
+      'Se recuperează în săptămâna de recuperări, cu acordul cadrului didactic.',
+      null,
+    ],
+    [
+      'Unde găsesc orarul oficial?',
+      'Pe site-ul facultății, dar aici îl aveți deja importat și vă anunță când se schimbă.',
+      null,
+    ],
+    [
+      'Grup de studiu pentru Inteligență Artificială',
+      'Ne vedem miercuri după curs în C2-6, aducem laptopurile.',
+      'IAu',
+    ],
+    [
+      'Cum mă înscriu la bursa socială?',
+      'Dosarul se depune la secretariat în primele trei săptămâni de la începerea semestrului.',
+      null,
+    ],
+    [
+      'Există sală de sport pentru studenți?',
+      'Da, cu legitimația de student, în intervalul de după-amiază.',
+      null,
+    ],
+    [
+      'Ce editor folosiți la Programarea Calculatoarelor?',
+      'Orice, dar la examen se compilează din linia de comandă. Învățați asta din prima.',
+      'PC2',
+    ],
+    ['Se poate da restanță și la laborator?', 'Nu, laboratorul se reface anul următor dacă nu îl treci.', null],
+    ['Câte stagii de practică sunt?', 'Două, după anul 2 și după anul 3, câte 90 de ore fiecare.', null],
+    ['Cum ajung de la gară la facultate?', 'Tramvaiul 1 oprește lângă campusul Tudor Vladimirescu, apoi mai sunt 10 minute pe jos.', null],
+    [
+      'Merită clubul de robotică?',
+      'Da. Se lucrează pe proiecte reale și e cel mai simplu mod de a învăța practic.',
+      null,
+    ],
+  ];
+
+  const created = await Promise.all(
+    posts.map(([title, content, short], i) =>
+      prisma.forumPost.create({
+        data: {
+          categoryId: category(i),
+          authorId: author(i + 2),
+          subjectId: subjectOf(short),
+          title: title!,
+          content: content!,
+          createdAt: DateTime.now()
+            .minus({ days: posts.length - i, hours: i })
+            .toJSDate(),
+        },
+      }),
+    ),
+  );
+
+  // votes and comments exist so the triggers for score and comment_count have work to do
+  for (const [i, post] of created.entries()) {
+    const voters = users.slice(0, (i % 5) + 2);
+    await prisma.postVote.createMany({
+      data: voters.map((u, j) => ({
+        userId: u.id,
+        postId: post.id,
+        value: j === 0 && i % 7 === 0 ? -1 : 1,
+      })),
+    });
+    if (i % 3 === 0) {
+      await prisma.forumComment.create({
+        data: { postId: post.id, authorId: author(i + 1), content: 'Mulțumesc, exact asta căutam.' },
+      });
+      await prisma.forumComment.create({
+        data: { postId: post.id, authorId: author(i + 4), content: 'Confirm, la fel a fost și anul trecut.' },
+      });
+    }
+  }
+
+  await prisma.notification.createMany({
+    data: users.slice(2).map((u) => ({
+      userId: u.id,
+      type: 'schedule_changed',
+      title: 'Orarul grupei tale s-a schimbat',
+      body: 'Un curs și-a schimbat sala față de importul anterior.',
+      link: '/orar',
+    })),
+  });
 
   return {
     users: users.length,
+    posts: created.length,
   };
 }

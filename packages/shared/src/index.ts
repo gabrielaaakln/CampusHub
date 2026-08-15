@@ -5,4 +5,7 @@ export * from './auth.js';
 export * from './normalize.js';
 export * from './schedule.js';
 export * from './map.js';
+export * from './notifications.js';
+export * from './forum.js';
+export * from './moderation.js';
 export * from './catalog.js';

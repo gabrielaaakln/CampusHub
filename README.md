@@ -81,6 +81,29 @@ Rezultatul deschide fișa sălii: clădire, etaj, indicații text, tip de sală 
 săptămâna aceasta. Sala selectată stă în URL, deci butonul „Arată sala pe hartă" din alte ecrane duce
 direct acolo.
 
+### Forum
+
+Cinci categorii (Anul 1, Cursuri și laboratoare, Examene și sesiune, Cămin și cazare, Timp liber),
+sortare după cele mai noi sau după scor, filtrare pe categorie și pe disciplină, căutare în titluri și
+paginare.
+
+O postare are voturi, comentarii imbricate până la nivelul 5 și buton de raportare. Voturile pe
+postări și pe comentarii merg în ambele sensuri, iar al doilea click pe același vot îl retrage.
+Scorul nu se calculează în aplicație: e întreținut de trigger-e în baza de date și citit înapoi din
+ea după fiecare vot, deci o eroare acolo se vede imediat.
+
+Ștergerea e logică peste tot: postarea sau comentariul își păstrează locul, ca firul discuției să nu
+se rupă.
+
+### Notificări
+
+Listă cu badge în bara de sus, marcare ca citit una câte una sau toate deodată. Lista se reîmprospătează
+la 60 de secunde, iar același răspuns aduce și numărul de necitite, deci un singur apel ține și lista,
+și badge-ul.
+
+Tipurile emise acum: orarul grupei s-a schimbat, ai primit o cerere la un anunț, cererea ta a primit
+răspuns, un moderator ți-a șters ceva.
+
 ### Profil și cont
 
 Nume afișat, grupă aleasă dintr-o listă reală și semigrupă limitată la câte are grupa respectivă.
