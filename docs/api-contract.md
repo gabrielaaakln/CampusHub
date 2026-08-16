@@ -45,6 +45,7 @@ Prefix: `/api/v1`. Convențiile sunt fixate înainte de primul endpoint și nu s
 | GET | `/floors/:id/rooms` | - | sălile unui etaj |
 | GET | `/rooms/search?q=&limit=` | - | fuzzy pe numărul sălii **și** pe alias-uri; maxim 50 |
 | GET | `/rooms/:id` | - | fișa sălii plus orele care se țin în ea săptămâna aceasta |
+| GET | `/me/calendar?from=&to=` | da | agregat orar + termene + evenimente, maxim 62 de zile |
 | GET | `/notifications?page=&limit=&unread=` | da | `meta` are în plus `unread` |
 | PATCH | `/notifications/:id/read` | da | 204; 404 dacă notificarea e a altcuiva |
 | PATCH | `/notifications/read-all` | da | `{ data: { marked } }` |
@@ -60,6 +61,9 @@ Prefix: `/api/v1`. Convențiile sunt fixate înainte de primul endpoint și nu s
 | POST | `/reports` | da | 201; 409 dacă ai raportat deja, 400 pe propriul conținut |
 | GET | `/groups?studyYear=&q=` | - | grupele facultății, pentru profil |
 | GET | `/subjects` | - | disciplinele facultății, pentru termene |
+| GET | `/deadlines?from=&to=&subjectId=&mine=&page=` | - | termenele grupei tale plus cele ale facultății |
+| POST | `/deadlines` | da | 201; fără `groupId` intră pe grupa autorului, `null` cere moderator |
+| PATCH · DELETE | `/deadlines/:id` | autor sau moderator | ștergere logică |
 
 ### `POST /schedule/import`
 
@@ -104,6 +108,36 @@ Caută fără diacritice și cu greșeli de scriere. Numărul sălii se compară
 `svgElementId` apare doar când flag-ul `floorplans` e pornit. Alias-urile sunt reale, nu inventate:
 sunt derivate din laboratoarele care se țin efectiv în sala respectivă.
 
+### `GET /me/calendar`
+
+O singură formă pentru toate sursele. Frontend-ul nu știe nimic despre paritate, semigrupe sau
+vacanțe: serverul a aplicat deja calendarul academic.
+
+```json
+{ "data": {
+  "term": { "id": 1, "academicYear": "2025-2026", "semester": 2, "timezone": "Europe/Bucharest" },
+  "weeks": [ { "index": 5, "parity": "impar", "startsOn": "2026-08-03", "endsOn": "2026-08-09" } ],
+  "items": [
+    { "id": "sched:412:2026-08-03", "kind": "class", "title": "Programare web", "type": "laborator",
+      "startsAt": "2026-08-03T16:00:00.000+03:00", "endsAt": "2026-08-03T18:00:00.000+03:00",
+      "professor": "ș.l.dr.ing. A. Archip", "group": "1306",
+      "room": { "id": 17, "number": "C1-4", "building": "Corp C" } },
+    { "id": "deadline:88", "kind": "deadline", "title": "Tema 2", "type": "tema",
+      "startsAt": "2026-08-09T23:59:00.000+03:00", "endsAt": null, "subjectId": 4 },
+    { "id": "event:12", "kind": "event", "title": "Hackathon AC",
+      "startsAt": "2026-08-10T10:00:00.000+03:00", "endsAt": "2026-08-10T16:00:00.000+03:00" }
+  ]
+} }
+```
+
+Reguli aplicate de server, în ordine: în afara `[starts_on, ends_on]` nu se generează nimic; zilele
+din `academic_breaks` se sar; paritatea zilei se calculează din `first_week_parity`; intră doar
+`parity IN ('ambele', paritatea zilei)`, `subgroup IN (0, semigrupa ta)` și, dacă intrarea are
+`starts_week` / `ends_week`, doar săptămânile din interval. Data se combină cu `TIME` **în fusul
+facultății**, deci ora rămâne aceeași și după schimbarea orei.
+
+`id` este stabil între apeluri: `sched:<id intrare>:<data>`.
+
 ### Forum și anunțuri: ce nu se trimite niciodată
 
 **Adresa de email nu apare în niciun răspuns**, nici măcar pentru moderatori. Autorul e
@@ -132,6 +166,16 @@ alimentează badge-ul din antet, deci un singur apel ține și lista, și număr
 
 Tipurile emise acum: `schedule_changed` (importerul, o notificare per grupă per rulare),
 `listing_request`, `listing_request_answered` și `content_removed` (moderatorul a șters ceva).
+
+### `GET /deadlines`
+
+Un termen fără grupă aparține întregii facultăți și îl vede toată lumea; unul cu grupă e vizibil doar
+grupei respective. Lista începe de acum înainte, ca și evenimentele. Un student scrie implicit pentru
+grupa lui: dacă trimite `groupId: null` primește 403, pentru că „toată facultatea" e o decizie de
+moderator.
+
+Termenele apar și în `GET /me/calendar` cu `kind: "deadline"`, deci ecranul de calendar nu trebuie
+să le ceară separat ca să le arate.
 
 ### `GET /config`
 

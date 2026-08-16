@@ -81,6 +81,21 @@ Rezultatul deschide fișa sălii: clădire, etaj, indicații text, tip de sală 
 săptămâna aceasta. Sala selectată stă în URL, deci butonul „Arată sala pe hartă" din alte ecrane duce
 direct acolo.
 
+### Calendar și termene
+
+O singură vedere pe săptămână, ca tablou, cu ziua curentă marcată, navigare înainte și înapoi și
+buton de întoarcere la săptămâna curentă. Adună trei surse: orele din orar, termenele și evenimentele.
+
+Traducerea din regulă săptămânală în momente concrete o face serverul, nu interfața. Se aplică, în
+ordine: limitele semestrului, vacanțele și sesiunile, paritatea săptămânii calculată din paritatea
+primei săptămâni, semigrupa ta, intervalele de tipul „doar după săptămâna 7", și abia la final data se
+combină cu ora în fusul facultății. Ultimul pas contează: la schimbarea orei din toamnă, o lipire
+naivă ar decala toate cursurile cu o oră pentru o săptămână întreagă.
+
+Tot din calendar se administrează termenele: temă, examen, proiect sau altceva, cu disciplină și
+descriere. Un termen fără grupă e pentru toată facultatea și cere rol de moderator, ca să nu anunțe
+primul student care greșește un câmp o temă pentru 57 de grupe.
+
 ### Forum
 
 Cinci categorii (Anul 1, Cursuri și laboratoare, Examene și sesiune, Cămin și cazare, Timp liber),

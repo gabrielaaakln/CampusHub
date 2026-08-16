@@ -18,6 +18,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { to: '/orar', label: 'Orar', icon: 'orar' },
   { to: '/harta', label: 'Hartă', icon: 'harta' },
+  { to: '/calendar', label: 'Calendar', icon: 'calendar' },
   { to: '/forum', label: 'Forum', icon: 'forum' },
 ];
 
