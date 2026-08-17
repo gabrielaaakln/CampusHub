@@ -57,6 +57,13 @@ Prefix: `/api/v1`. Convențiile sunt fixate înainte de primul endpoint și nu s
 | GET | `/forum/posts/:id/comments` | - | listă plată cu `parentCommentId` și `depth`; arborele se face în ecran |
 | POST | `/forum/posts/:id/comments` | da | 201 cu lista completă; `parentCommentId` pentru răspuns, `depth` maxim 5 |
 | POST | `/forum/posts/:id/vote` · `/forum/comments/:id/vote` | da | `{ value: 1 \| -1 \| 0 }`, 0 șterge votul |
+| GET | `/listings?kind=&subjectId=&q=&mine=&page=` | - | — |
+| POST | `/listings` | da | 201 |
+| GET | `/listings/requests` | da | cererile primite și cele trimise |
+| GET | `/listings/:id` | - | — |
+| PATCH · DELETE | `/listings/:id` | autor sau moderator | status, preț, descriere; ștergere logică |
+| POST | `/listings/:id/requests` | da | 409 dacă ai cerut deja sau anunțul e închis |
+| PATCH | `/requests/:id` | autorul anunțului | acceptă, refuză, încheie |
 | DELETE | `/forum/comments/:id` | autor sau moderator | ștergere logică, 204 |
 | POST | `/reports` | da | 201; 409 dacă ai raportat deja, 400 pe propriul conținut |
 | GET | `/groups?studyYear=&q=` | - | grupele facultății, pentru profil |

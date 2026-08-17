@@ -110,6 +110,21 @@ ea după fiecare vot, deci o eroare acolo se vede imediat.
 Ștergerea e logică peste tot: postarea sau comentariul își păstrează locul, ca firul discuției să nu
 se rupă.
 
+### Anunțuri
+
+Piața internă a facultății. Un anunț e produs sau serviciu, cu titlu, descriere, preț opțional și
+unitate de preț („oră", „lucrare"). Meditațiile sunt un serviciu, nu un modul separat.
+
+Filtrare pe tip, pe disciplină și pe text, plus filtrul „ale mele". Statusurile sunt activ, rezervat
+și închis.
+
+Contactul dintre studenți trece prin cereri, nu prin adrese de email. Cine e interesat trimite o
+cerere cu un mesaj, autorul primește o notificare și răspunde cu acceptare sau refuz. Nicio adresă nu
+iese din server în tot fluxul.
+
+Termenii sunt scriși în ecran: anunțurile pentru redactarea de lucrări sau proiecte la comandă sunt
+interzise, la fel și bunurile restricționate.
+
 ### Notificări
 
 Listă cu badge în bara de sus, marcare ca citit una câte una sau toate deodată. Lista se reîmprospătează

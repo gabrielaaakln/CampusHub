@@ -5,6 +5,7 @@ export type IconName =
   | 'harta'
   | 'calendar'
   | 'forum'
+  | 'anunturi'
   | 'notificari'
   | 'setari'
   | 'theme'
@@ -38,6 +39,12 @@ const PATHS: Record<IconName, ReactElement> = {
     <>
       <path d="M2.5 3.5h11v8h-7l-4 3z" />
       <path d="M6.5 15.5h7l4 3v-11h-3" />
+    </>
+  ),
+  anunturi: (
+    <>
+      <path d="M2.5 2.5h8l7 7-8 8-7-7z" />
+      <circle cx="6" cy="6" r="1.5" />
     </>
   ),
   notificari: (

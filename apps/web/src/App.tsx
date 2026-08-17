@@ -9,6 +9,8 @@ import { CalendarPage } from './pages/CalendarPage.js';
 import { NotificationsPage } from './pages/NotificationsPage.js';
 import { ForumPage } from './pages/ForumPage.js';
 import { PostPage } from './pages/PostPage.js';
+import { MarketPage } from './pages/MarketPage.js';
+import { ListingPage } from './pages/ListingPage.js';
 import { ProfilePage } from './pages/ProfilePage.js';
 import { NotFoundPage } from './pages/NotFoundPage.js';
 
@@ -32,6 +34,8 @@ export function App() {
         <Route path="notificari" element={<NotificationsPage />} />
         <Route path="forum" element={<ForumPage />} />
         <Route path="forum/:id" element={<PostPage />} />
+        <Route path="anunturi" element={<MarketPage />} />
+        <Route path="anunturi/:id" element={<ListingPage />} />
         <Route path="profil" element={<ProfilePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

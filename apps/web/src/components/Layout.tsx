@@ -20,6 +20,7 @@ const NAV: NavItem[] = [
   { to: '/harta', label: 'Hartă', icon: 'harta' },
   { to: '/calendar', label: 'Calendar', icon: 'calendar' },
   { to: '/forum', label: 'Forum', icon: 'forum' },
+  { to: '/anunturi', label: 'Anunțuri', icon: 'anunturi' },
 ];
 
 // what you do about the account rather than what you read sits together at the foot of the rail

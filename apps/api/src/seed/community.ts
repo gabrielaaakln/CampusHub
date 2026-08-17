@@ -1,4 +1,5 @@
 import argon2 from 'argon2';
+import { DateTime } from 'luxon';
 import { prisma } from '../lib/db.js';
 
 /**
@@ -243,6 +244,50 @@ export async function seedCommunity({ facultyId, groupIds, roomIds }: Ids) {
     }
   }
 
+  const listings: {
+    kind: 'produs' | 'serviciu';
+    title: string;
+    description: string;
+    price: number | null;
+    unit?: string;
+    subject?: string;
+  }[] = [
+    { kind: 'produs', title: 'Curs de Metode numerice, ediția 2024', description: 'Fără sublinieri, cotor intact.', price: 40 , subject: 'MN' },
+    { kind: 'produs', title: 'Placă de dezvoltare STM32 și cabluri', description: 'Folosită un semestru la laborator.', price: 120 },
+    { kind: 'produs', title: 'Monitor 24 inch, full HD', description: 'Două intrări HDMI, fără pixeli morți.', price: 350 },
+    { kind: 'produs', title: 'Halat de laborator, mărimea M', description: 'Purtat de două ori.', price: 30 },
+    { kind: 'produs', title: 'Set de cărți pentru anul 1', description: 'Matematici discrete, Programare, Electrotehnică. Se dau împreună.', price: 90 },
+    { kind: 'produs', title: 'Multimetru digital', description: 'Cu sonde noi, verificat.', price: 75 },
+    { kind: 'produs', title: 'Birou mic pentru cămin', description: 'Se demontează, încape în lift.', price: 100 },
+    { kind: 'produs', title: 'Căști cu reducere de zgomot', description: 'Utile în sala de lectură.', price: 200 },
+    { kind: 'serviciu', title: 'Meditații la Programarea Calculatoarelor', description: 'C și structuri de date, la mine sau online.', price: 60, unit: 'oră' , subject: 'PC2' },
+    { kind: 'serviciu', title: 'Meditații la Metode numerice', description: 'Pregătire pentru restanța din toamnă.', price: 50, unit: 'oră' , subject: 'MN' },
+    { kind: 'serviciu', title: 'Ajutor la configurat rețele pentru laborator', description: 'Explic subnetarea și rutarea statică.', price: 40, unit: 'oră' , subject: 'SD3' },
+    { kind: 'serviciu', title: 'Tehnoredactare lucrări', description: 'Formatare în Word sau LaTeX. Nu scriu conținut.', price: 25, unit: 'lucrare' },
+    { kind: 'serviciu', title: 'Transport bagaje la început de an', description: 'Dubă mică, în Iași și împrejurimi.', price: 80, unit: 'drum' },
+    { kind: 'serviciu', title: 'Reparații laptopuri', description: 'Schimb pastă termoconductoare, curățare, upgrade SSD.', price: 70, unit: 'intervenție' },
+    { kind: 'serviciu', title: 'Cursuri de conversație în engleză', description: 'Grup mic, marți și joi seara.', price: 35, unit: 'oră' },
+  ];
+
+  const createdListings = await Promise.all(
+    listings.map((l, i) =>
+      prisma.listing.create({
+        data: {
+          facultyId,
+          authorId: author(i + 3),
+          kind: l.kind,
+          subjectId: subjectOf(l.subject ?? null),
+          title: l.title,
+          description: l.description,
+          price: l.price,
+          priceUnit: l.unit ?? null,
+          status: i === 4 ? 'rezervat' : 'activ',
+          createdAt: DateTime.now().minus({ days: listings.length - i }).toJSDate(),
+        },
+      }),
+    ),
+  );
+
   await prisma.notification.createMany({
     data: users.slice(2).map((u) => ({
       userId: u.id,
@@ -256,5 +301,6 @@ export async function seedCommunity({ facultyId, groupIds, roomIds }: Ids) {
   return {
     users: users.length,
     posts: created.length,
+    listings: listings.length,
   };
 }
