@@ -9,6 +9,8 @@ export * from './calendar.js';
 export * from './notifications.js';
 export * from './forum.js';
 export * from './marketplace.js';
+export * from './events.js';
+export * from './rights.js';
 export * from './moderation.js';
 export * from './catalog.js';
 export * from './deadlines.js';

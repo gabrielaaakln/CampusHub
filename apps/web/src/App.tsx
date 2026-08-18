@@ -11,10 +11,13 @@ import { ForumPage } from './pages/ForumPage.js';
 import { PostPage } from './pages/PostPage.js';
 import { MarketPage } from './pages/MarketPage.js';
 import { ListingPage } from './pages/ListingPage.js';
+import { EventsPage } from './pages/EventsPage.js';
 import { ProfilePage } from './pages/ProfilePage.js';
+import { RightsPage } from './pages/RightsPage.js';
 import { NotFoundPage } from './pages/NotFoundPage.js';
 
 export function App() {
+  const events = useFeature('events');
   const registration = useFeature('registration');
 
   return (
@@ -36,7 +39,10 @@ export function App() {
         <Route path="forum/:id" element={<PostPage />} />
         <Route path="anunturi" element={<MarketPage />} />
         <Route path="anunturi/:id" element={<ListingPage />} />
+        <Route path="drepturi" element={<RightsPage />} />
         <Route path="profil" element={<ProfilePage />} />
+        {/* a disabled module redirects instead of showing a dead screen */}
+        <Route path="evenimente" element={events ? <EventsPage /> : <Navigate to="/" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

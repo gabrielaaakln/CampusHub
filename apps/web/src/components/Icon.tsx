@@ -6,6 +6,8 @@ export type IconName =
   | 'calendar'
   | 'forum'
   | 'anunturi'
+  | 'evenimente'
+  | 'drepturi'
   | 'notificari'
   | 'setari'
   | 'theme'
@@ -45,6 +47,21 @@ const PATHS: Record<IconName, ReactElement> = {
     <>
       <path d="M2.5 2.5h8l7 7-8 8-7-7z" />
       <circle cx="6" cy="6" r="1.5" />
+    </>
+  ),
+  evenimente: (
+    <>
+      <rect x="2.5" y="4" width="15" height="13.5" />
+      <path d="M2.5 8h15M6.5 2.5v3M13.5 2.5v3" />
+      <path d="M6.5 12h7" />
+    </>
+  ),
+  drepturi: (
+    <>
+      <path d="M10 2.5v15M4.5 17.5h11" />
+      <path d="M2.5 6.5h15" />
+      <path d="M5.5 6.5 3 12h5z" />
+      <path d="M14.5 6.5 12 12h5z" />
     </>
   ),
   notificari: (

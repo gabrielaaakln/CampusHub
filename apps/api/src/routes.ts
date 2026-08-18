@@ -8,10 +8,13 @@ import { calendarRouter } from './modules/calendar/routes.js';
 import { notificationsRouter } from './modules/notifications/routes.js';
 import { forumRouter } from './modules/forum/routes.js';
 import { marketplaceRouter } from './modules/marketplace/routes.js';
+import { eventsRouter } from './modules/events/routes.js';
+import { rightsRouter } from './modules/rights/routes.js';
 import { moderationRouter } from './modules/moderation/routes.js';
 import { catalogRouter } from './modules/catalog/routes.js';
 import { deadlinesRouter } from './modules/deadlines/routes.js';
 import { doubleCsrfProtection, generateCsrfToken } from './middleware/csrf.js';
+import { isFeatureOn } from './config.js';
 
 export const apiRouter: Router = Router();
 
@@ -43,6 +46,9 @@ apiRouter.use(calendarRouter);
 apiRouter.use(notificationsRouter);
 apiRouter.use(forumRouter);
 apiRouter.use(marketplaceRouter);
+// a module behind a stopped flag has no routes at all
+if (isFeatureOn('events')) apiRouter.use(eventsRouter);
+apiRouter.use(rightsRouter);
 apiRouter.use(moderationRouter);
 apiRouter.use(catalogRouter);
 apiRouter.use(deadlinesRouter);

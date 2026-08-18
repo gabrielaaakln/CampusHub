@@ -125,6 +125,24 @@ iese din server în tot fluxul.
 Termenii sunt scriși în ecran: anunțurile pentru redactarea de lucrări sau proiecte la comandă sunt
 interzise, la fel și bunurile restricționate.
 
+### Evenimente
+
+Evenimentele facultății, listate de acum înainte, nu de la începutul timpului. Fiecare poate fi legat
+de o sală reală din hartă. Înscrierea și retragerea sunt idempotente și întorc evenimentul recitit,
+deci numărul de înscriși e mereu cel din bază. Există filtrul „unde m-am înscris", iar publicarea cere
+rol de moderator.
+
+Evenimentele apar și în calendar, alături de ore și termene.
+
+### Drepturile studentului
+
+Paisprezece intrări pe opt categorii: burse, examinare, cazare, reprezentare, practică, mobilități,
+taxe și date personale. Fiecare are un rezumat scris pe înțelesul unui student și, unde există, link
+către regulamentul oficial de pe site-ul universității.
+
+Se poate filtra pe categorie și căuta full-text. Căutarea ignoră diacriticele și face stemming
+românesc, deci „contestatie" găsește „Contestația la examen" și „burse" găsește „bursa".
+
 ### Notificări
 
 Listă cu badge în bara de sus, marcare ca citit una câte una sau toate deodată. Lista se reîmprospătează
@@ -221,3 +239,8 @@ Datele de demo nu sunt inventate de la zero. Un modul de seed citește fișierul
 și derivă din el 10 clădiri, 65 de săli cu indicații, 57 de grupe și 94 de discipline cu alias-uri,
 apoi importă orarul prin exact același pipeline ca un upload. O bază proaspătă are deci deja o rulare de
 import și un istoric de schimbări.
+
+Peste asta se adaugă conținut scris de mână, realist ca ton și fără date personale copiate de undeva:
+8 utilizatori, 5 categorii de forum cu 20 de postări și comentarii, 16 anunțuri, 5 evenimente și cele
+14 articole despre drepturi.
+

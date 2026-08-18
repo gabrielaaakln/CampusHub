@@ -65,6 +65,12 @@ Prefix: `/api/v1`. Convențiile sunt fixate înainte de primul endpoint și nu s
 | POST | `/listings/:id/requests` | da | 409 dacă ai cerut deja sau anunțul e închis |
 | PATCH | `/requests/:id` | autorul anunțului | acceptă, refuză, încheie |
 | DELETE | `/forum/comments/:id` | autor sau moderator | ștergere logică, 204 |
+| GET | `/events?from=&to=&mine=&page=` | - | doar cu flag-ul `events`; fără `from` începe de acum |
+| POST | `/events` | moderator | 201; `roomId` leagă evenimentul de o sală reală |
+| GET | `/events/:id` | - | — |
+| DELETE | `/events/:id` | moderator | ștergere logică, 204 |
+| POST · DELETE | `/events/:id/attend` | da | înscriere și retragere; întorc evenimentul actualizat |
+| GET | `/rights?q=&category=&page=` | - | căutare full-text, `meta.categories` vine în același răspuns |
 | POST | `/reports` | da | 201; 409 dacă ai raportat deja, 400 pe propriul conținut |
 | GET | `/groups?studyYear=&q=` | - | grupele facultății, pentru profil |
 | GET | `/subjects` | - | disciplinele facultății, pentru termene |
@@ -173,6 +179,37 @@ alimentează badge-ul din antet, deci un singur apel ține și lista, și număr
 
 Tipurile emise acum: `schedule_changed` (importerul, o notificare per grupă per rulare),
 `listing_request`, `listing_request_answered` și `content_removed` (moderatorul a șters ceva).
+
+### `GET /events`
+
+Lista începe de acum înainte, nu de la începutul timpului: fără `from` serverul folosește momentul
+cererii. `mine=true` păstrează doar evenimentele la care ești înscris. Înscrierea de două ori
+înseamnă tot o înscriere, iar `POST` și `DELETE /events/:id/attend` întorc evenimentul recitit, deci
+ecranul nu trebuie să ghicească numărul nou.
+
+```json
+{ "data": [ {
+  "id": 3, "title": "Târg de practică și internship",
+  "description": "Firme din Iași.", "location": null,
+  "room": { "id": 2, "number": "AC0-2", "building": "Corp AC" },
+  "startsAt": "2026-08-15T10:00:00.000+03:00", "endsAt": "2026-08-15T16:00:00.000+03:00",
+  "externalUrl": null, "author": { "id": 3, "displayName": "Maria Ursu", "groupName": "1306" },
+  "attendeeCount": 3, "isAttending": false, "createdAt": "2026-08-06T00:26:52.944Z"
+} ], "meta": { "page": 1, "limit": 20, "total": 5, "has_next": false } }
+```
+
+Aceleași evenimente apar și în `GET /me/calendar`, cu `kind: "event"`. Modulul e în spatele
+flag-ului `events`: când e stins, rutele nu există deloc.
+
+### `GET /rights`
+
+Conținutul e scris de mână și încărcat prin seed, deci nu există rută de scriere. `q` intră în
+`search_vector` prin `websearch_to_tsquery` cu configurația `ro_unaccent`: „contestatie" găsește
+„Contestația la examen", iar „burse" găsește și „bursa". Un articol cu `facultyId: null` e valabil
+pentru toată universitatea și apare în aceeași listă.
+
+`meta.categories` conține toate categoriile existente, nu doar pe cele din pagina curentă — filtrul
+din interfață nu are nevoie de un al doilea apel și nu se golește când cauți.
 
 ### `GET /deadlines`
 

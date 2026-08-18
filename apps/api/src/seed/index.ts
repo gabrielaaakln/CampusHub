@@ -78,11 +78,14 @@ async function main() {
     .map((name) => groups.find((g) => g.name === name))
     .filter((g) => g !== undefined);
 
-  await seedCommunity({
+  const community = await seedCommunity({
     facultyId: faculty.id,
     groupIds: (demoGroups.length > 0 ? demoGroups : groups).map((g) => g.id),
     roomIds,
   });
+  console.log(
+    `  ${community.users} users, ${community.posts} posts, ${community.listings} listings, ${community.events} events, ${community.rights} rights articles`,
+  );
   console.log('two accounts can sign in with a password the rest are authors only');
   console.log(`  admin   ${DEMO_ADMIN_EMAIL}`);
   console.log(`  student ${DEMO_STUDENT_EMAIL}`);

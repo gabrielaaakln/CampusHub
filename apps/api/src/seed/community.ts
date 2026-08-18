@@ -288,6 +288,64 @@ export async function seedCommunity({ facultyId, groupIds, roomIds }: Ids) {
     ),
   );
 
+  // the official link is what a student actually needs the summary only says what to look for
+  const rights: [string, string, string, string | null][] = [
+    ['Burse', 'Bursa de performanță', 'Se acordă pe baza mediei din anul precedent. Dosarul se depune la secretariat în primele trei săptămâni ale semestrului.', 'https://www.tuiasi.ro/studenti/burse/'],
+    ['Burse', 'Bursa socială', 'Se acordă în funcție de venitul pe membru de familie. Actele necesare sunt în regulamentul de burse.', 'https://www.tuiasi.ro/studenti/burse/'],
+    ['Burse', 'Bursa de ajutor social ocazional', 'Se cere o singură dată, pentru situații neprevăzute: deces în familie, boală, naștere. Nu depinde de medie.', null],
+    ['Examinare', 'Contestația la examen', 'Se depune în 24 de ore de la afișarea rezultatului. Lucrarea se recorectează de o comisie.', null],
+    ['Examinare', 'Reexaminarea', 'Fiecare disciplină poate fi susținută de două ori în sesiunile de restanțe, contra taxă după prima încercare.', null],
+    ['Examinare', 'Mărirea de notă', 'Se poate susține o singură dată pe disciplină, iar ultima notă rămâne cea finală, chiar dacă e mai mică.', null],
+    ['Cazare', 'Repartizarea în cămin', 'Criteriul principal este media, cu locuri rezervate pentru cazuri sociale.', 'https://www.tuiasi.ro/studenti/cazare/'],
+    ['Cazare', 'Schimbarea camerei', 'Se cere la administrația căminului, în scris, iar mutarea se face dacă există loc liber.', null],
+    ['Reprezentare', 'Studentul reprezentant', 'Fiecare grupă își alege un reprezentant care participă la ședințele de an.', null],
+    ['Reprezentare', 'Studenții din consiliul facultății', 'Studenții au un sfert din locurile din consiliul facultății și vot la deciziile care îi privesc.', null],
+    ['Practică', 'Stagiul de practică', 'Durata minimă este de 90 de ore pe stagiu și se poate face și la o firmă găsită de student.', null],
+    ['Mobilități', 'Erasmus+', 'Selecția se face pe bază de dosar și de medie, iar disciplinele promovate în străinătate se recunosc integral.', 'https://www.tuiasi.ro/studenti/erasmus/'],
+    ['Taxe', 'Taxa de studiu și eșalonarea', 'Taxa se poate plăti în rate, cu o cerere depusă la secretariat înainte de termenul primei rate.', null],
+    ['Date personale', 'Accesul la propriile date', 'Poți cere secretariatului situația școlară și corectarea datelor greșite.', null],
+  ];
+
+  await Promise.all(
+    rights.map(([category, title, summary, url], i) =>
+      prisma.rightsArticle.create({
+        data: { facultyId, category, title, summary, officialUrl: url, position: i },
+      }),
+    ),
+  );
+
+  const now = DateTime.now();
+  const events: [string, string, number, number][] = [
+    ['Hackathon AC', 'Două zile de lucru în echipe de câte patru.', 5, 0],
+    ['Târg de practică și internship', 'Firme din Iași și București, discuții directe.', 9, 1],
+    ['Seară de robotică', 'Demonstrații ale clubului de robotică.', 12, 2],
+    ['Curs deschis: securitate web', 'Invitat din industrie, intrare liberă.', 16, 3],
+    ['Turneu de fotbal între ani', 'Înscrierile se fac pe echipe.', 21, 4],
+  ];
+
+  const createdEvents = await Promise.all(
+    events.map(([title, description, inDays, roomIdx]) =>
+      prisma.event.create({
+        data: {
+          facultyId,
+          createdBy: author(1),
+          title,
+          description,
+          roomId: roomIds[roomIdx % roomIds.length] ?? null,
+          startsAt: now.plus({ days: inDays }).set({ hour: 10, minute: 0 }).toJSDate(),
+          endsAt: now.plus({ days: inDays }).set({ hour: 16, minute: 0 }).toJSDate(),
+        },
+      }),
+    ),
+  );
+
+  // an event with zero attendees looks broken rather than new
+  await prisma.eventAttendee.createMany({
+    data: createdEvents.flatMap((event, i) =>
+      users.slice(2, 2 + ((i % 4) + 2)).map((u) => ({ eventId: event.id, userId: u.id })),
+    ),
+  });
+
   await prisma.notification.createMany({
     data: users.slice(2).map((u) => ({
       userId: u.id,
@@ -302,5 +360,7 @@ export async function seedCommunity({ facultyId, groupIds, roomIds }: Ids) {
     users: users.length,
     posts: created.length,
     listings: listings.length,
+    events: createdEvents.length,
+    rights: rights.length,
   };
 }
