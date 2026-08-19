@@ -152,6 +152,21 @@ la 60 de secunde, iar același răspuns aduce și numărul de necitite, deci un 
 Tipurile emise acum: orarul grupei s-a schimbat, ai primit o cerere la un anunț, cererea ta a primit
 răspuns, un moderator ți-a șters ceva.
 
+### Moderare
+
+Raportarea se face din forum și din anunțuri și funcționează indiferent dacă panoul e pornit sau nu.
+Nu poți raporta propriul conținut și nu poți raporta același lucru de două ori.
+
+Moderatorul are o coadă cu rapoartele, filtrabilă pe stare, în care ținta e rezolvată și afișată (ce
+postare, ce anunț, ce comentariu). Poate rezolva sau respinge un raport și poate șterge conținutul
+odată cu asta. Ștergerea e logică, iar autorul primește o notificare: o ștergere tăcută arată ca un bug
+al aplicației, nu ca o decizie.
+
+Când trei studenți raportează aceeași postare, rezolvarea o închide o singură dată pentru toate
+rapoartele deschise pe acea țintă. Un cont nu se poate șterge din panou.
+
+Panoul include și regula scrisă după care se rezolvă coada, aceeași pentru toți.
+
 ### Profil și cont
 
 Nume afișat, grupă aleasă dintr-o listă reală și semigrupă limitată la câte are grupa respectivă.

@@ -1,5 +1,12 @@
+import type { Prisma } from '@prisma/client';
 import type {
+  ReportCountsDto,
+  ReportDto,
+  ReportListMeta,
+  ReportListQuery,
+  ReportStatus,
   ReportTarget,
+  ReportTargetDto,
 } from '@campushub/shared';
 import { prisma } from '../../lib/db.js';
 import { authorSelect, toAuthor } from '../../lib/author.js';
@@ -143,3 +150,134 @@ export async function createReport(
   });
 }
 
+const reportInclude = {
+  reporter: { select: authorSelect },
+  handler: { select: authorSelect },
+} satisfies Prisma.ReportInclude;
+
+export async function listReports(
+  facultyId: number,
+  query: ReportListQuery,
+): Promise<{ data: ReportDto[]; meta: ReportListMeta }> {
+  const where: Prisma.ReportWhereInput = { status: query.status };
+
+  const [rows, total, grouped] = await Promise.all([
+    prisma.report.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+      include: reportInclude,
+    }),
+    prisma.report.count({ where }),
+    prisma.report.groupBy({ by: ['status'], _count: { _all: true } }),
+  ]);
+
+  const targets = await loadTargets(facultyId, rows);
+  const counts: ReportCountsDto = { open: 0, resolved: 0, dismissed: 0 };
+  for (const row of grouped) counts[row.status] = row._count._all;
+
+  return {
+    data: rows.map((row) => toReportDto(row, targets.get(key(row.targetType, row.targetId)))),
+    meta: {
+      page: query.page,
+      limit: query.limit,
+      total,
+      has_next: query.page * query.limit < total,
+      counts,
+    },
+  };
+}
+
+export async function resolveReport(
+  facultyId: number,
+  reportId: number,
+  moderatorId: number,
+  input: { status: Exclude<ReportStatus, 'open'>; deleteTarget: boolean },
+): Promise<ReportDto> {
+  const report = await prisma.report.findUnique({ where: { id: reportId } });
+  if (!report) throw notFound('Raportul nu există');
+
+  const targets = await loadTargets(facultyId, [report]);
+  const target = targets.get(key(report.targetType, report.targetId));
+
+  if (input.deleteTarget) {
+    if (!target) throw notFound('Conținutul raportat nu mai există');
+    await deleteTarget(report.targetType, report.targetId, target, moderatorId);
+  }
+
+  // every open report on the same target gets the same answer the queue holds one row per problem
+  await prisma.report.updateMany({
+    where: { targetType: report.targetType, targetId: report.targetId, status: 'open' },
+    data: { status: input.status, handledBy: moderatorId, handledAt: new Date() },
+  });
+
+  const after = await prisma.report.findUniqueOrThrow({
+    where: { id: reportId },
+    include: reportInclude,
+  });
+  const fresh = await loadTargets(facultyId, [after]);
+  return toReportDto(after, fresh.get(key(after.targetType, after.targetId)));
+}
+
+/** logical delete everywhere the thread keeps its shape and the author finds out */
+async function deleteTarget(
+  type: ReportTarget,
+  id: number,
+  target: TargetInfo,
+  moderatorId: number,
+): Promise<void> {
+  switch (type) {
+    case 'post':
+      await prisma.forumPost.update({ where: { id }, data: { isDeleted: true } });
+      break;
+    case 'comment':
+      await prisma.forumComment.update({ where: { id }, data: { isDeleted: true } });
+      break;
+    case 'listing':
+      await prisma.listing.update({ where: { id }, data: { isDeleted: true } });
+      break;
+    case 'user':
+      // banning a person is a different decision than removing a piece of content
+      throw badRequest('Un cont nu se șterge din panoul de moderare');
+  }
+
+  if (target.authorId && target.authorId !== moderatorId) {
+    await prisma.notification.create({
+      data: {
+        userId: target.authorId,
+        type: 'content_removed',
+        title: 'Un conținut al tău a fost șters',
+        body: `„${target.title}” a fost șters de un moderator.`,
+        link: target.link,
+      },
+    });
+  }
+}
+
+function toReportDto(
+  row: Prisma.ReportGetPayload<{ include: typeof reportInclude }>,
+  target: TargetInfo | undefined,
+): ReportDto {
+  const preview: ReportTargetDto = target
+    ? {
+        title: target.title,
+        excerpt: target.excerpt,
+        link: target.link,
+        isDeleted: target.isDeleted,
+      }
+    : null;
+
+  return {
+    id: row.id,
+    targetType: row.targetType,
+    targetId: row.targetId,
+    reason: row.reason,
+    status: row.status,
+    reporter: toAuthor(row.reporter),
+    handledBy: toAuthor(row.handler),
+    handledAt: row.handledAt?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
+    target: preview,
+  };
+}

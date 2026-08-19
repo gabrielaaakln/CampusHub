@@ -346,6 +346,34 @@ export async function seedCommunity({ facultyId, groupIds, roomIds }: Ids) {
     ),
   });
 
+  // the moderation queue has something in it at the demo without anyone having to report live
+  const moderator = users.find((u) => u.role === 'moderator')!;
+  await prisma.report.createMany({
+    data: [
+      {
+        reporterId: author(3),
+        targetType: 'post' as const,
+        targetId: created[7]!.id,
+        reason: 'Postarea nu are legătură cu facultatea.',
+      },
+      {
+        reporterId: author(5),
+        targetType: 'listing' as const,
+        targetId: createdListings[11]!.id,
+        reason: 'Pare o ofertă de redactat lucrări la comandă.',
+      },
+      {
+        reporterId: author(6),
+        targetType: 'post' as const,
+        targetId: created[3]!.id,
+        reason: 'Titlu care induce în eroare.',
+        status: 'dismissed' as const,
+        handledBy: moderator.id,
+        handledAt: now.minus({ days: 2 }).toJSDate(),
+      },
+    ],
+  });
+
   await prisma.notification.createMany({
     data: users.slice(2).map((u) => ({
       userId: u.id,

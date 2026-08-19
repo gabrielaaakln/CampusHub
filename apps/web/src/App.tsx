@@ -14,10 +14,12 @@ import { ListingPage } from './pages/ListingPage.js';
 import { EventsPage } from './pages/EventsPage.js';
 import { ProfilePage } from './pages/ProfilePage.js';
 import { RightsPage } from './pages/RightsPage.js';
+import { ModerationPage } from './pages/ModerationPage.js';
 import { NotFoundPage } from './pages/NotFoundPage.js';
 
 export function App() {
   const events = useFeature('events');
+  const moderation = useFeature('moderationPanel');
   const registration = useFeature('registration');
 
   return (
@@ -43,6 +45,10 @@ export function App() {
         <Route path="profil" element={<ProfilePage />} />
         {/* a disabled module redirects instead of showing a dead screen */}
         <Route path="evenimente" element={events ? <EventsPage /> : <Navigate to="/" replace />} />
+        <Route
+          path="moderare"
+          element={moderation ? <ModerationPage /> : <Navigate to="/" replace />}
+        />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

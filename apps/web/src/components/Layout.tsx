@@ -27,6 +27,7 @@ const NAV: NavItem[] = [
 
 // what you do about the account rather than what you read sits together at the foot of the rail
 const FOOT: NavItem[] = [
+  { to: '/moderare', label: 'Moderare', icon: 'moderare', feature: 'moderationPanel', staffOnly: true },
   { to: '/profil', label: 'Setări', icon: 'setari' },
 ];
 

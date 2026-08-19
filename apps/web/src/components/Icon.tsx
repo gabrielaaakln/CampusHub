@@ -8,6 +8,7 @@ export type IconName =
   | 'anunturi'
   | 'evenimente'
   | 'drepturi'
+  | 'moderare'
   | 'notificari'
   | 'setari'
   | 'theme'
@@ -62,6 +63,12 @@ const PATHS: Record<IconName, ReactElement> = {
       <path d="M2.5 6.5h15" />
       <path d="M5.5 6.5 3 12h5z" />
       <path d="M14.5 6.5 12 12h5z" />
+    </>
+  ),
+  moderare: (
+    <>
+      <path d="M10 2.5 17 5v5.5c0 4-3 6.4-7 7.5-4-1.1-7-3.5-7-7.5V5z" />
+      <path d="M7 10l2 2 4-4" />
     </>
   ),
   notificari: (

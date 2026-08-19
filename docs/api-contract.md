@@ -72,6 +72,8 @@ Prefix: `/api/v1`. Convențiile sunt fixate înainte de primul endpoint și nu s
 | POST · DELETE | `/events/:id/attend` | da | înscriere și retragere; întorc evenimentul actualizat |
 | GET | `/rights?q=&category=&page=` | - | căutare full-text, `meta.categories` vine în același răspuns |
 | POST | `/reports` | da | 201; 409 dacă ai raportat deja, 400 pe propriul conținut |
+| GET | `/moderation/reports?status=&page=` | moderator | doar cu flag-ul `moderationPanel`; `meta.counts` pe stări |
+| PATCH | `/moderation/reports/:id` | moderator | `{ status, deleteTarget }` |
 | GET | `/groups?studyYear=&q=` | - | grupele facultății, pentru profil |
 | GET | `/subjects` | - | disciplinele facultății, pentru termene |
 | GET | `/deadlines?from=&to=&subjectId=&mine=&page=` | - | termenele grupei tale plus cele ale facultății |
@@ -210,6 +212,30 @@ pentru toată universitatea și apare în aceeași listă.
 
 `meta.categories` conține toate categoriile existente, nu doar pe cele din pagina curentă — filtrul
 din interfață nu are nevoie de un al doilea apel și nu se golește când cauți.
+
+### `POST /reports` și `GET /moderation/reports`
+
+Raportarea e N0 și rămâne pornită chiar dacă panoul e stins: un raport ajunge în `reports` oricum.
+Ținta e polimorfică (`post`, `comment`, `listing`, `user`) și se rezolvă în cod, cu un `switch`, o
+interogare per tip. Nu poți raporta propriul conținut (400) și nu poți raporta același lucru de două
+ori (409).
+
+```json
+{ "data": [ {
+  "id": 1, "targetType": "post", "targetId": 3,
+  "reason": "Postarea nu are legătură cu facultatea.", "status": "open",
+  "reporter": { "id": 2, "displayName": "Vlad Munteanu", "groupName": "1306" },
+  "handledBy": null, "handledAt": null, "createdAt": "2026-08-06T00:26:52.960Z",
+  "target": { "title": "Cât durează să iei permisul?", "excerpt": "În medie două luni...",
+              "link": "/forum/3", "isDeleted": false }
+} ], "meta": { "page": 1, "limit": 20, "total": 2, "has_next": false,
+               "counts": { "open": 2, "resolved": 0, "dismissed": 1 } } }
+```
+
+`PATCH /moderation/reports/:id` primește `{ status: "resolved" | "dismissed", deleteTarget }`.
+Cu `deleteTarget: true` conținutul se șterge **logic** și autorul primește o notificare
+`content_removed`. Un cont nu se șterge de aici (400): ban-ul e o altă decizie. Toate rapoartele
+deschise pe aceeași țintă primesc același răspuns odată, ca să nu rămână duplicate în coadă.
 
 ### `GET /deadlines`
 
