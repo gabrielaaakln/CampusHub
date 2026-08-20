@@ -16,6 +16,7 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
+  { to: '/', label: 'Acum', icon: 'acum' },
   { to: '/orar', label: 'Orar', icon: 'orar' },
   { to: '/harta', label: 'Hartă', icon: 'harta' },
   { to: '/calendar', label: 'Calendar', icon: 'calendar' },
@@ -30,6 +31,30 @@ const FOOT: NavItem[] = [
   { to: '/moderare', label: 'Moderare', icon: 'moderare', feature: 'moderationPanel', staffOnly: true },
   { to: '/profil', label: 'Setări', icon: 'setari' },
 ];
+
+/** one box over forum listings and rights it lives in the bar so it is reachable from anywhere */
+function TopSearch() {
+  const navigate = useNavigate();
+  const [q, setQ] = useState('');
+
+  return (
+    <form
+      className="topsearch"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (q.trim().length >= 2) void navigate(`/cauta?q=${encodeURIComponent(q.trim())}`);
+      }}
+    >
+      <input
+        type="search"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="Caută în forum, anunțuri, drepturi"
+        aria-label="Caută"
+      />
+    </form>
+  );
+}
 
 export function Layout() {
   const { faculty, features } = useAppConfig();
@@ -70,6 +95,7 @@ export function Layout() {
           <b>CampusHub</b>
           <span>{faculty?.name ?? 'Platformă universitară'}</span>
         </Link>
+        <TopSearch />
 
         <div className="account">
           <button

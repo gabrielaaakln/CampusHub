@@ -13,6 +13,7 @@ import { rightsRouter } from './modules/rights/routes.js';
 import { moderationRouter } from './modules/moderation/routes.js';
 import { catalogRouter } from './modules/catalog/routes.js';
 import { deadlinesRouter } from './modules/deadlines/routes.js';
+import { searchRouter } from './modules/search/routes.js';
 import { doubleCsrfProtection, generateCsrfToken } from './middleware/csrf.js';
 import { isFeatureOn } from './config.js';
 
@@ -52,3 +53,4 @@ apiRouter.use(rightsRouter);
 apiRouter.use(moderationRouter);
 apiRouter.use(catalogRouter);
 apiRouter.use(deadlinesRouter);
+apiRouter.use(searchRouter);

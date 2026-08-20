@@ -14,3 +14,4 @@ export * from './rights.js';
 export * from './moderation.js';
 export * from './catalog.js';
 export * from './deadlines.js';
+export * from './search.js';

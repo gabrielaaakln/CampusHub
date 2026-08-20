@@ -23,6 +23,19 @@ Ecranul principal al aplicației, „Acum", răspunde fix la ea.
 
 ## Module
 
+### Acum
+
+Ecranul de start. Arată ora în desfășurare sau următorul curs, cu sala, profesorul și un buton care
+duce direct la sala respectivă pe hartă. Alături stau un card cu ziua ta (câte ore ai azi, prima,
+ultima, cât a trecut din zi) și restul orelor de astăzi. Sub ele, ultimele notificări.
+
+Cardul spune și ce fel de oră urmează, curs sau laborator, pentru că asta schimbă unde te duci și ce
+iei cu tine. Când chiar ești la oră, cardul își schimbă titlul în „În desfășurare" și primește un fond
+distinct.
+
+Ecranul nu are endpoint propriu: refolosește calendarul pe șapte zile și alege în client ce e acum și
+ce urmează.
+
 ### Orar
 
 Orarul grupei și al semigrupei tale, pe zile, cu interval orar, disciplină, tip de activitate,
@@ -96,6 +109,10 @@ Tot din calendar se administrează termenele: temă, examen, proiect sau altceva
 descriere. Un termen fără grupă e pentru toată facultatea și cere rol de moderator, ca să nu anunțe
 primul student care greșește un câmp o temă pentru 57 de grupe.
 
+Butonul „Descarcă .ics" scoate același calendar în formatul citit de Google Calendar, Outlook și
+telefon. Momentele se scriu în UTC, fără bloc de fus orar, deci fișierul nu depinde de setările
+aplicației care îl deschide.
+
 ### Forum
 
 Cinci categorii (Anul 1, Cursuri și laboratoare, Examene și sesiune, Cămin și cazare, Timp liber),
@@ -151,6 +168,14 @@ la 60 de secunde, iar același răspuns aduce și numărul de necitite, deci un 
 
 Tipurile emise acum: orarul grupei s-a schimbat, ai primit o cerere la un anunț, cererea ta a primit
 răspuns, un moderator ți-a șters ceva.
+
+### Căutare globală
+
+Un câmp de căutare în bara de sus, valabil din orice ecran. Caută simultan în postări, anunțuri și
+drepturi și întoarce o singură listă ordonată după relevanță, cu tipul ca etichetă pe rând. Cine caută
+„bursa" vrea răspunsul, nu trei coloane.
+
+Interogarea acceptă ghilimele și excluderea cu minus, ca într-un motor de căutare obișnuit.
 
 ### Moderare
 

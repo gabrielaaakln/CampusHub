@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 
 export type IconName =
+  | 'acum'
   | 'orar'
   | 'harta'
   | 'calendar'
@@ -18,6 +19,14 @@ export type IconName =
 
 // geometric shapes only squares circles and straight lines the grid has no curves to spare
 const PATHS: Record<IconName, ReactElement> = {
+  acum: (
+    <>
+      <rect x="2.5" y="2.5" width="6" height="6" />
+      <rect x="11.5" y="2.5" width="6" height="6" fill="currentColor" />
+      <rect x="2.5" y="11.5" width="6" height="6" fill="currentColor" />
+      <rect x="11.5" y="11.5" width="6" height="6" />
+    </>
+  ),
   orar: (
     <>
       <circle cx="10" cy="10" r="7.5" />

@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router';
 import { Layout } from './components/Layout.js';
 import { useFeature } from './lib/useAppConfig.js';
+import { HomePage } from './pages/HomePage.js';
 import { LoginPage } from './pages/LoginPage.js';
 import { RegisterPage } from './pages/RegisterPage.js';
 import { SchedulePage } from './pages/SchedulePage.js';
@@ -13,8 +14,10 @@ import { MarketPage } from './pages/MarketPage.js';
 import { ListingPage } from './pages/ListingPage.js';
 import { EventsPage } from './pages/EventsPage.js';
 import { ProfilePage } from './pages/ProfilePage.js';
+import { SearchPage } from './pages/SearchPage.js';
 import { RightsPage } from './pages/RightsPage.js';
 import { ModerationPage } from './pages/ModerationPage.js';
+import { PrivacyPage } from './pages/PrivacyPage.js';
 import { NotFoundPage } from './pages/NotFoundPage.js';
 
 export function App() {
@@ -25,8 +28,7 @@ export function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        {/* until the now screen exists the timetable is the landing page */}
-        <Route index element={<SchedulePage />} />
+        <Route index element={<HomePage />} />
         <Route path="intra" element={<LoginPage />} />
         {/* an account comes from the institutional sign in the form is only the local fallback */}
         <Route
@@ -43,6 +45,8 @@ export function App() {
         <Route path="anunturi/:id" element={<ListingPage />} />
         <Route path="drepturi" element={<RightsPage />} />
         <Route path="profil" element={<ProfilePage />} />
+        <Route path="cauta" element={<SearchPage />} />
+        <Route path="confidentialitate" element={<PrivacyPage />} />
         {/* a disabled module redirects instead of showing a dead screen */}
         <Route path="evenimente" element={events ? <EventsPage /> : <Navigate to="/" replace />} />
         <Route

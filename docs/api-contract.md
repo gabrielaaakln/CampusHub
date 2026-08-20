@@ -79,6 +79,8 @@ Prefix: `/api/v1`. Convențiile sunt fixate înainte de primul endpoint și nu s
 | GET | `/deadlines?from=&to=&subjectId=&mine=&page=` | - | termenele grupei tale plus cele ale facultății |
 | POST | `/deadlines` | da | 201; fără `groupId` intră pe grupa autorului, `null` cere moderator |
 | PATCH · DELETE | `/deadlines/:id` | autor sau moderator | ștergere logică |
+| GET | `/me/calendar.ics` | da | doar cu flag-ul `icsExport`; fișier `text/calendar` |
+| GET | `/search?q=&type=&limit=` | - | full-text peste postări, anunțuri și drepturi |
 
 ### `POST /schedule/import`
 
@@ -246,6 +248,29 @@ moderator.
 
 Termenele apar și în `GET /me/calendar` cu `kind: "deadline"`, deci ecranul de calendar nu trebuie
 să le ceară separat ca să le arate.
+
+### `GET /me/calendar.ics`
+
+Aceleași date ca `/me/calendar`, în formatul pe care îl citesc Google Calendar, Outlook și telefonul.
+Fereastra implicită e de la acum minus 7 zile până la plus 120; `from` și `to` o pot schimba.
+
+Toate momentele sunt scrise în **UTC** (`DTSTART:20260803T130000Z`), deci fișierul nu conține niciun
+bloc `VTIMEZONE` și nu depinde de fusul aplicației care îl citește. Un termen n-are sfârșit, așa că
+primește 30 de minute — un eveniment de lungime zero e ascuns de unele calendare.
+
+### `GET /search`
+
+O singură listă, ordonată după `ts_rank`, peste trei surse. Tipul e o etichetă, nu o secțiune.
+Configurația `ro_unaccent` face ca „contestatie" să găsească „Contestația la examen". Interogarea
+folosește `websearch_to_tsquery`, deci ghilimelele și `-cuvânt` funcționează ca într-un motor de
+căutare obișnuit.
+
+```json
+{ "data": [ { "type": "rights", "id": 12, "title": "Bursa socială",
+              "excerpt": "Se acordă în funcție de venitul pe membru de familie.",
+              "meta": "Burse", "link": "/drepturi" } ],
+  "meta": { "q": "bursa", "counts": { "post": 1, "listing": 0, "rights": 3 } } }
+```
 
 ### `GET /config`
 

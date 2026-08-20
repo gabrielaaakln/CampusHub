@@ -346,6 +346,31 @@ export async function seedCommunity({ facultyId, groupIds, roomIds }: Ids) {
     ),
   });
 
+  const deadlines = [
+    ['Tema 2 la Programare web', 'tema', 4, 'PW'],
+    ['Proiect Baze de date, etapa 1', 'proiect', 8, 'BD'],
+    ['Colocviu de laborator la Sisteme distribuite', 'examen', 11, 'SD3'],
+    ['Referat la Sisteme de operare', 'tema', 14, 'SO'],
+    ['Prezentare proiect Ingineria programării', 'proiect', 20, 'IP'],
+    ['Test la Arhitectura calculatoarelor', 'examen', 25, 'AC'],
+  ] as const;
+
+  await Promise.all(
+    deadlines.map(([title, type, inDays, short], i) =>
+      prisma.deadline.create({
+        data: {
+          facultyId,
+          groupId: group(i),
+          subjectId: subjectOf(short),
+          createdBy: author(i),
+          title,
+          type,
+          dueAt: now.plus({ days: inDays }).set({ hour: 23, minute: 59 }).toJSDate(),
+        },
+      }),
+    ),
+  );
+
   // the moderation queue has something in it at the demo without anyone having to report live
   const moderator = users.find((u) => u.role === 'moderator')!;
   await prisma.report.createMany({
