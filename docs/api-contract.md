@@ -33,6 +33,8 @@ Prefix: `/api/v1`. Convențiile sunt fixate înainte de primul endpoint și nu s
 | GET | `/csrf` | - | `{ data: { token } }` |
 | POST | `/auth/register` | - | 201; doar domenii instituționale; 409 la email duplicat; **montat doar cu flag-ul `registration`**, care implicit e stins în producție |
 | POST | `/auth/login` | - | 200 cu utilizatorul; mesaj identic pentru parolă greșită și cont inexistent; **montat doar cu flag-ul `passwordLogin`** |
+| GET | `/auth/sso/start` | - | 302 către Microsoft; doar cu flag-ul `sso`, altfel 401 |
+| GET | `/auth/sso/callback` | - | 302 înapoi în aplicație: `/` , `/profil?bun-venit=1` la cont nou, `/intra?eroare=…` la eșec |
 | POST | `/auth/logout` | - | 204 |
 | GET | `/auth/me` | - | 200 cu `data: null` pentru anonimi |
 | PATCH | `/auth/me` | da | nume afișat, grupă, semigrupă |

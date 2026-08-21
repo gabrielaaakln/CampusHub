@@ -6,7 +6,8 @@ import { badRequest, unauthorized } from '../../lib/errors.js';
 import { loginLimiter, writeLimiter } from '../../middleware/rateLimit.js';
 import { requireAuth, toSessionUser } from '../../middleware/auth.js';
 import { valid, validate } from '../../middleware/validate.js';
-import { anonymize, register, verifyCredentials } from './service.js';
+import { anonymize, register, signInWithSso, verifyCredentials } from './service.js';
+import { beginSignIn, completeSignIn } from './sso.js';
 import { config } from '../../config.js';
 
 export const authRouter: Router = Router();
@@ -32,6 +33,66 @@ if (config.features.passwordLogin) {
     await startSession(req, user.id);
     res.json({ data: user });
   });
+}
+
+if (config.features.sso) {
+  // a plain redirect not json the browser is the one travelling
+  authRouter.get('/auth/sso/start', loginLimiter, async (req, res) => {
+    const handshake = beginSignIn();
+    req.session.ssoState = handshake.state;
+    req.session.ssoVerifier = handshake.verifier;
+    req.session.ssoNonce = handshake.nonce;
+    await new Promise<void>((resolve, reject) =>
+      req.session.save((err) => (err ? reject(err) : resolve())),
+    );
+    res.redirect(handshake.url);
+  });
+
+  authRouter.get('/auth/sso/callback', loginLimiter, async (req, res) => {
+    const { state, verifier, nonce } = takeHandshake(req);
+    const code = typeof req.query.code === 'string' ? req.query.code : null;
+    const returned = typeof req.query.state === 'string' ? req.query.state : null;
+
+    // microsoft reports a refused consent here rather than by failing the token call
+    if (typeof req.query.error === 'string') {
+      const description =
+        typeof req.query.error_description === 'string'
+          ? req.query.error_description
+          : req.query.error;
+      return res.redirect(failure(description));
+    }
+    if (!code || !state || !returned || returned !== state || !verifier || !nonce) {
+      return res.redirect(failure('Autentificarea a expirat sau a fost pornită în altă filă'));
+    }
+
+    try {
+      const claims = await completeSignIn(code, verifier, nonce);
+      const { user, isNew } = await signInWithSso(claims);
+      await startSession(req, user.id);
+      // a fresh account has no group so it lands where it can pick one
+      res.redirect(isNew || !user.groupId ? '/profil?bun-venit=1' : '/');
+    } catch (err) {
+      res.redirect(failure(err instanceof Error ? err.message : 'Autentificare eșuată'));
+    }
+  });
+} else {
+  authRouter.get('/auth/sso/start', () => {
+    throw unauthorized('Autentificarea instituțională nu este pornită');
+  });
+}
+
+/** the handshake is single use so it leaves the session whether it matched or not */
+function takeHandshake(req: Request): { state?: string; verifier?: string; nonce?: string } {
+  const { ssoState: state, ssoVerifier: verifier, ssoNonce: nonce } = req.session;
+  delete req.session.ssoState;
+  delete req.session.ssoVerifier;
+  delete req.session.ssoNonce;
+  return { state, verifier, nonce };
+}
+
+/** the message lands back in the address bar so it stays short and encoded */
+function failure(message: string): string {
+  return `/intra?eroare=${encodeURIComponent(message.slice(0, 200))}`;
 }
 
 authRouter.post('/auth/logout', async (req, res) => {

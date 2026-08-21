@@ -28,6 +28,7 @@
     "express-rate-limit": "^8.6.2",
     "express-session": "^1.18.1",
     "helmet": "^8.0.0",
+    "jose": "^6.2.8",
     "luxon": "^3.5.0",
     "multer": "^2.2.0",
     "pino": "^9.5.0",

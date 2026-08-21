@@ -21,6 +21,13 @@ dimineață: ce am acum, unde, și ce urmează.
 
 Ecranul principal al aplicației, „Acum", răspunde fix la ea.
 
+## Fluxul unui student
+
+1. Intră cu contul instituțional TUIASI. Nu există formular de înregistrare pe site-ul public.
+2. La prima intrare ajunge pe profil și își alege grupa și semigrupa dintr-o listă reală de 57 de
+   grupe. Tokenul de la Microsoft nu conține grupa, deci pasul ăsta nu poate fi sărit.
+3. De acolo, Orarul, Calendarul și „Acum" se completează singure.
+
 ## Module
 
 ### Acum
@@ -216,6 +223,21 @@ operație, nu în interfață. Interfața doar ascunde ce oricum ar fi refuzat.
 
 ## Autentificare
 
+Contul se obține **doar** intrând cu identitatea instituțională TUIASI, prin Entra ID. Fluxul e
+authorization code cu PKCE, cu `state` și `nonce` ținute în sesiune și consumate o singură dată, iar
+`id_token`-ul se validează pe cheile publice ale tenantului: semnătură, emitent, audiență, vechime și
+`nonce`. Codul se schimbă pe token pe canalul din spate.
+
+Ambele domenii instituționale, `tuiasi.ro` și `student.tuiasi.ro`, sunt în același tenant, iar
+aplicația cere autentificarea chiar la acel tenant. Filtrul „doar conturi de la universitate" se aplică
+la Microsoft, înainte să ajungă ceva la noi, iar domeniul adresei se verifică a doua oară în server.
+
+Identitatea păstrată e subiectul stabil emis pentru aplicația noastră, nu un identificator global, deci
+două aplicații diferite nu pot corela același student.
+
+Ce nu face aplicația niciodată: nu cere parola instituțională într-un formular propriu. Parola se
+tastează doar pe pagina universității. Un formular care ar face altfel ar fi phishing funcțional.
+
 Formularul cu parolă a rămas în spatele unui flag, pentru cele două conturi de prezentare și pentru
 teste. Înregistrarea cu parolă e un flag separat, stins în producție: până când nu există confirmare pe
 mail, nimic nu dovedește că adresa tastată e a ta, iar un formular deschis pe un site public ar
@@ -231,6 +253,7 @@ Starea din producție, la data scrierii:
 
 | Flag | Stare | Ce înseamnă |
 |---|---|---|
+| `sso` | pornit | intrare cu contul instituțional |
 | `passwordLogin` | pornit | formularul cu parolă, pentru conturile de demo |
 | `registration` | stins | nu se pot face conturi cu parolă |
 | `events` | pornit | modulul de evenimente |
@@ -283,4 +306,89 @@ import și un istoric de schimbări.
 Peste asta se adaugă conținut scris de mână, realist ca ton și fără date personale copiate de undeva:
 8 utilizatori, 5 categorii de forum cu 20 de postări și comentarii, 16 anunțuri, 5 evenimente și cele
 14 articole despre drepturi.
+
+## Securitate
+
+O trecere completă a fost făcută înainte de punerea pe server. **Douăsprezece teste de securitate**
+țin comportamentele de mai jos pe loc: nu sunt afirmații din documentație, sunt aserțiuni care sparg
+build-ul dacă cineva le strică.
+
+| Zonă | Ce e implementat |
+|---|---|
+| Sesiuni | id nou la fiecare login, deci un id plantat înainte de autentificare nu supraviețuiește; logout distruge rândul din baza de date, nu doar cookie-ul din browser |
+| Cont blocat sau anonimizat | sesiunea se distruge la următoarea cerere |
+| Cookie | `httpOnly`, `sameSite=lax`, `secure` în producție, prefix `__Host-` |
+| CSRF | double submit legat de id-ul sesiunii, aplicat înaintea autentificării |
+| Parole | argon2id, cost egal și mesaj identic pentru parolă greșită și cont inexistent |
+| Roluri | verificare ierarhică în server, la fiecare rută protejată |
+| Proprietate | fiecare modificare și ștergere verifică autorul în server |
+| Referințe directe | o notificare sau un rând al altcuiva întorc 404, nu conținut străin |
+| SQL | totul prin Prisma sau prin interogări parametrizate; nicio concatenare de string-uri |
+| XSS | React escapează tot, iar inserarea de HTML brut nu apare nicăieri în cod |
+| Antete | `helmet` pe API; politică de securitate a conținutului, `frame-ancestors 'none'`, `form-action 'self'` și HSTS pe răspunsurile reale |
+| Email | nu iese niciodată prin API; două teste verifică literal răspunsurile |
+| Jurnale | cookie-urile, antetul de autorizare și orice câmp de tip parolă sunt redactate |
+| Secrete | nicio parolă nu există ca literal în cod; fișierele de mediu sunt excluse din git și verificate pe tot istoricul |
+
+Limitele de trafic sunt pe niveluri, nu una singură:
+
+| Limită | Prag | Pe ce |
+|---|---|---|
+| globală | 100 pe minut | tot API-ul |
+| login | 5 la 15 minute | doar încercările eșuate |
+| scriere | 10 pe minut | tot ce creează conținut nou |
+| voturi | 30 pe minut | un vot e un click, 10 ar deranja un om real |
+| căutare | 30 pe minut | cele mai scumpe citiri din aplicație |
+| import de orar | 5 la 15 minute | o rulare parcurge tot orarul |
+
+Editările și ștergerile pe rânduri care există deja și îți aparțin rămân doar sub limita globală: sunt
+mărginite oricum de cât conținut ai, iar un prag strict ar bloca un moderator care rezolvă
+cincisprezece rapoarte într-un minut.
+
+Două lucruri găsite și reparate merită menționate, pentru că amândouă anulau tăcut o protecție:
+
+Cheia de rate limit citea un antet trimis de client fără nicio condiție. Pe un server expus, oricine
+îl falsifica primea o găleată nouă la fiecare cerere, adică nicio limită, exact la login și la
+căutare. Acum antetul se crede doar când e pornit explicit, iar implicit e stins. Verificat pe serverul
+care rulează: limita de căutare se aprinde exact la a 31-a cerere într-un minut, iar cu găleata
+epuizată un antet falsificat primește tot 429.
+
+Al doilea: parolele conturilor de prezentare erau valori implicite scrise în cod, deci publice, una
+fiind de administrator. Acum seed-ul le cere din mediu, cu minimum 12 caractere, iar verificarea se
+face înainte de a goli vreo tabelă.
+
+Backup-ul și restaurarea au fost probate pe date reale: dump, apoi ștergere deliberată a 20 de postări,
+833 de ore de orar și 6 utilizatori, apoi restaurare. Baza a revenit la exact aceleași cifre și
+aplicația a pornit peste ea.
+
+## Teste
+
+**179 de teste, toate trec.** 173 în API (20 de fișiere) și 6 pe funcțiile comune de normalizare.
+
+| Fel | Câte | Ce acoperă |
+|---|---|---|
+| unitare | 50 | parserul CSV, parserul XLSX pe fișierul real, diff-ul de orar, generatorul de ocurențe, exportul `.ics`, normalizarea textului |
+| de pornire | 10 | flagurile și refuzurile de la boot, fără bază de date |
+| de integrare | 119 | fluxurile complete ale fiecărui modul |
+
+Testele de integrare nu folosesc mock-uri: pornesc aplicația și lovesc un PostgreSQL real, prin HTTP,
+cu sesiune și token CSRF, ca un browser.
+
+Ce verifică, pe scurt: fluxul de autentificare și cel de identitate instituțională; importerul cu
+diff, notificări, dezactivare, sursă goală și supapa de 30%; parsarea fișierului real al facultății;
+căutarea de săli; calendarul cu paritate, vacanțe, intervale de săptămâni, semigrupă și schimbarea orei
+de toamnă; forumul cu voturi prin trigger, numărătoarea comentariilor, sortare, ștergere logică și
+drepturi; anunțurile cu cereri, notificări, statusuri și drepturi; izolarea notificărilor între
+utilizatori; evenimentele cu înscriere idempotentă și apariție în calendar; drepturile cu căutare fără
+diacritice; moderarea cu raport dublu, raport pe propriul conținut, coadă închisă studenților și
+ștergere cu notificare; termenele cu izolare între grupe; căutarea globală pe trei surse.
+
+Pe lângă teste, aplicația a fost parcursă manual în browser, pe ambele teme, cu conturile de
+prezentare: harta cu cele 10 clădiri, căutarea „lab retele" fără diacritice, orarul, calendarul,
+termenele adăugate din interfață, forumul cu voturi și răspunsuri imbricate, o cerere de contact ajunsă
+ca notificare fără nicio adresă de email, înscrierea la evenimente, coada de moderare ca moderator și
+403 ca student, exportul `.ics` (128 de evenimente pentru grupa 1306) și importul de orar prin ecranul
+de admin, cu fișierul real: 1667 de activități citite, zero erori.
+
+Autentificarea instituțională a fost probată cap la cap cu un cont TUIASI real, din producție.
 

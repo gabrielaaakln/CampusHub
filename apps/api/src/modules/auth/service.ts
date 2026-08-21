@@ -6,6 +6,7 @@ import { config } from '../../config.js';
 import { prisma } from '../../lib/db.js';
 import { badRequest, conflict, unauthorized } from '../../lib/errors.js';
 import { toSessionUser } from '../../middleware/auth.js';
+import type { SsoClaims } from './sso.js';
 
 export async function register(input: RegisterBody): Promise<SessionUser> {
   if (!isAllowedEmailDomain(input.email, config.allowedEmailDomains)) {
@@ -55,6 +56,77 @@ export async function verifyCredentials(email: string, password: string): Promis
   return session;
 }
 
+export type SsoSignIn = { user: SessionUser; isNew: boolean };
+
+/**
+ * an identity vouched for by the university idp
+ *
+ * matched first on the subject claim which survives a name or email change then on the email
+ * itself the email is safe to match on because it comes from the tenant that owns the domain not
+ * from anything the person typed here
+ */
+export async function signInWithSso(claims: SsoClaims): Promise<SsoSignIn> {
+  if (!isAllowedEmailDomain(claims.email, config.allowedEmailDomains)) {
+    throw unauthorized(
+      `Contul ${claims.email} nu aparține facultății (${config.allowedEmailDomains.join(', ')})`,
+    );
+  }
+
+  const bySubject = await prisma.user.findUnique({ where: { ssoSubject: claims.subject } });
+  const existing = bySubject ?? (await prisma.user.findUnique({ where: { email: claims.email } }));
+
+  if (existing) {
+    if (existing.isBanned) throw unauthorized('Cont suspendat');
+    if (existing.anonymizedAt) throw unauthorized('Cont indisponibil');
+
+    /**
+     * an address alone never hands over a privileged account
+     *
+     * matching on email is what links a student to the account seeded for them but admin@tuiasi.ro
+     * is a plausible real mailbox and owning it must not be the same as being our administrator
+     * once the subject is on the account the person has already proved they are that account
+     */
+    if (!bySubject && existing.role !== 'student') {
+      throw unauthorized(
+        'Există deja un cont cu drepturi speciale pe adresa asta. Un administrator trebuie să îl lege manual.',
+      );
+    }
+
+    await prisma.user.update({
+      where: { id: existing.id },
+      data: {
+        ssoSubject: claims.subject,
+        email: claims.email,
+        emailVerified: true,
+        // an account that arrived by password keeps it the provider says how it got in last
+        authProvider: 'sso',
+      },
+    });
+
+    const user = await toSessionUser(existing.id);
+    if (!user) throw unauthorized('Cont indisponibil');
+    return { user, isNew: false };
+  }
+
+  const created = await prisma.user.create({
+    data: {
+      // the idp knows the legal name the display name is the student's to change in the profile
+      displayName: claims.name ?? claims.email.split('@')[0] ?? 'Student',
+      email: claims.email,
+      ssoSubject: claims.subject,
+      authProvider: 'sso',
+      emailVerified: true,
+      passwordHash: null,
+      facultyId: config.facultyId,
+    },
+    select: { id: true },
+  });
+
+  const user = await toSessionUser(created.id);
+  if (!user) throw new Error('user vanished right after creation');
+  return { user, isNew: true };
+}
+
 /** deletion is anonymisation threads stay readable the person disappears */
 export async function anonymize(userId: number): Promise<void> {
   const filler = randomBytes(12).toString('hex');
@@ -64,6 +136,8 @@ export async function anonymize(userId: number): Promise<void> {
       displayName: 'Utilizator șters',
       email: `deleted-${filler}@invalid.local`,
       passwordHash: null,
+      // without this the next institutional sign in would walk straight back into the dead account
+      ssoSubject: null,
       avatarUrl: null,
       groupId: null,
       subgroup: null,

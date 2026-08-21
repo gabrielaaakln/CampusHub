@@ -267,6 +267,7 @@ model User {
   passwordHash  String?      @map("password_hash") @db.VarChar(255)
   authProvider  AuthProvider @default(local) @map("auth_provider")
   /// entra object id stable across email changes null for accounts that never used sso
+  ssoSubject    String?      @unique @map("sso_subject") @db.VarChar(64)
   facultyId     Int?         @map("faculty_id")
   groupId       Int?         @map("group_id")
   subgroup      Int?         @db.SmallInt

@@ -16,6 +16,10 @@ declare module 'express-session' {
     userId?: number;
     /** set when a csrf token was issued so the anonymous session persists */
     csrfBound?: boolean;
+    /** the three values the sso callback has to match the redirect it answers */
+    ssoState?: string;
+    ssoVerifier?: string;
+    ssoNonce?: string;
   }
 }
 

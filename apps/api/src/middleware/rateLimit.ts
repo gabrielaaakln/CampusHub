@@ -7,9 +7,17 @@ const TOO_MANY: ApiErrorBody = {
   error: { code: 'rate_limited', message: 'Prea multe cereri, încearcă mai târziu' },
 };
 
-// cloudflare carries the real client address behind the tunnel
-const keyGenerator = (req: Request): string =>
-  req.get('cf-connecting-ip') ?? ipKeyGenerator(req.ip ?? 'unknown');
+/**
+ * cloudflare carries the real client address but only if cloudflare is really in front
+ *
+ * anyone can send cf-connecting-ip so trusting it on an exposed server hands every caller a fresh
+ * bucket per request which is the same as having no rate limit at all it is opt in and off by
+ * default behind the tunnel express already resolves req ip from x-forwarded-for and trust proxy
+ */
+const keyGenerator = (req: Request): string => {
+  const forwarded = config.trustCloudflareHeader ? req.get('cf-connecting-ip') : undefined;
+  return forwarded ?? ipKeyGenerator(req.ip ?? 'unknown');
+};
 
 const base = {
   standardHeaders: 'draft-7' as const,
