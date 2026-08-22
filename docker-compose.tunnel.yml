@@ -1,0 +1,16 @@
+# started once separately and not restarted on every deploy
+#   docker compose -f docker-compose.tunnel.yml -p campushub-edge up -d
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
+    networks: [edge]
+    security_opt: ['no-new-privileges:true']
+
+networks:
+  edge:
+    external: true
+    name: campushub-edge

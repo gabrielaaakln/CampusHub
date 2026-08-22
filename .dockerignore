@@ -1,0 +1,17 @@
+node_modules
+**/node_modules
+**/dist
+.git
+.github
+web-dist
+releases
+coverage
+*.log
+# the bare patterns only match the root, and there is a second .env next to the server stack
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+docs

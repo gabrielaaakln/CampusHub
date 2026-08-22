@@ -290,3 +290,13 @@ căutare obișnuit.
 Frontend-ul citește asta o dată la boot și ascunde ce nu există. Un flag stins nu e o gaură vizibilă
 în interfață, ci o variantă mai simplă a aceluiași ecran.
 
+## Endpoint-uri planificate
+
+Se completează pe măsură ce modulele intră. Fiecare rută nouă se documentează aici în același PR.
+
+| Metodă | Rută | Sprint |
+|---|---|---|
+| GET | `/faculties`, `/faculties/:id/terms` | 1 |
+| POST | `/schedule/scrape` | 2 |
+| POST | `/listings/:id/images` | 2 (N1, doar cu flag-ul `uploads`) |
+| GET | `/notifications/stream` | 2 (N1, doar cu flag-ul `sse`) |

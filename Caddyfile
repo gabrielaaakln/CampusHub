@@ -1,0 +1,61 @@
+# 8080 and not 80 so the container can run as an unprivileged user a port under 1024 would need
+# a capability that no-new-privileges takes away again
+:8080 {
+    encode gzip zstd {
+        # only what is worth compressing sse stays uncompressed or it buffers
+        match {
+            header Content-Type text/html*
+            header Content-Type text/css*
+            header Content-Type application/javascript*
+            header Content-Type application/json*
+            header Content-Type image/svg+xml*
+        }
+    }
+
+    header {
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        X-Frame-Options "DENY"
+        # tls is terminated at cloudflare and the header travels down through the tunnel
+        # no includeSubDomains the other homelab hostnames are not ours to speak for
+        Strict-Transport-Security "max-age=31536000"
+        # form-action keeps a planted form from posting the page contents somewhere else
+        Content-Security-Policy "default-src 'self'; img-src 'self' data: https://*.tile.openstreetmap.org; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+        -Server
+    }
+
+    # tls ends at cloudflare and the hop from cloudflared to here is plain http so caddy would
+    # hand the api x-forwarded-proto http express would call the request insecure and drop the
+    # secure session cookie without a word this image only ever serves through the tunnel
+    handle /api/v1/notifications/stream {
+        reverse_proxy api:3000 {
+            header_up X-Forwarded-Proto https
+            flush_interval -1
+        }
+    }
+
+    handle /api/* {
+        reverse_proxy api:3000 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    # user uploads never interpreted by the browser
+    handle /uploads/* {
+        header {
+            Cache-Control "public, max-age=31536000, immutable"
+            X-Content-Type-Options "nosniff"
+            Content-Disposition "inline"
+            Content-Security-Policy "default-src 'none'; sandbox"
+        }
+        # spelled out rather than inherited from the working directory of the image
+        root * /srv
+        file_server
+    }
+
+    handle {
+        root * /srv
+        try_files {path} /index.html
+        file_server
+    }
+}

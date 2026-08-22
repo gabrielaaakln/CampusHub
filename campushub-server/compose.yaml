@@ -1,0 +1,143 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: campushub-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${DB_USER} -d ${DB_NAME}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+    # fără ports, baza nu e accesibilă din afara stivei
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: campushub-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      SESSION_SECRET: ${SESSION_SECRET}
+      PUBLIC_URL: ${PUBLIC_URL}
+      TAG: ${TAG:-odvserver}
+      # cloudflared apoi caddy, deci două salturi până la api
+      TRUST_PROXY_HOPS: 2
+      TRUST_CF_CONNECTING_IP: "true"
+      ALLOWED_EMAIL_DOMAINS: tuiasi.ro,student.tuiasi.ro
+      FEATURE_SSO: "true"
+      FEATURE_PASSWORD_LOGIN: "true"
+      FEATURE_REGISTRATION: "false"
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID:-607d63ca-9f36-4ad8-9f71-8b3efc392eb1}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      AZURE_CLIENT_SECRET: ${AZURE_CLIENT_SECRET}
+      AZURE_REDIRECT_URI: ${PUBLIC_URL}/api/v1/auth/sso/callback
+      FEATURE_UPLOADS: "false"
+      FEATURE_SCRAPER: "false"
+      FEATURE_SSE: "false"
+      FEATURE_FLOORPLANS: "false"
+      FEATURE_EMAIL_VERIFY: "false"
+      FEATURE_EVENTS: "true"
+      FEATURE_MODERATION_PANEL: "true"
+      FEATURE_ICS_EXPORT: "true"
+    volumes:
+      - snapshots:/app/snapshots
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://localhost:3000/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: campushub-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    user: 1000:1000
+    environment:
+      XDG_DATA_HOME: /tmp
+      XDG_CONFIG_HOME: /tmp
+    networks:
+      - default
+      - retea_publica
+    security_opt:
+      - no-new-privileges:true
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: campushub-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    depends_on:
+      - web
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
+    security_opt:
+      - no-new-privileges:true
+  # rulează migrațiile și iese, nu e un serviciu
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    profiles:
+      - tools
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+    command:
+      - npx
+      - prisma
+      - migrate
+      - deploy
+      - --schema
+      - apps/api/prisma/schema.prisma
+  # rescrie datele de prezentare, șterge tot ce era înainte
+  seed:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    profiles:
+      - tools
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      SESSION_SECRET: ${SESSION_SECRET}
+      PUBLIC_URL: ${PUBLIC_URL}
+      SEED_ALLOW_PROD: ${SEED_ALLOW_PROD:-no}
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-}
+      DEMO_STUDENT_PASSWORD: ${DEMO_STUDENT_PASSWORD:-}
+    command:
+      - node
+      - apps/api/dist/seed/index.js
+volumes:
+  pgdata: null
+  snapshots: null
+networks:
+  retea_publica:
+    external: true

@@ -1,0 +1,123 @@
+# the registry variant from campushub-hosting md: images pulled from ghcr, deployed by ci
+#
+# NOT the file used on the private host, which builds from source and lives outside this repository
+# the name is deliberate: dropped into a Dockge stack folder, a plain docker-compose.yml would be
+# picked up automatically and fail with "TAG must be set"
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt: ['no-new-privileges:true']
+    # no ports the database is not reachable from outside the docker network
+
+  api:
+    image: ghcr.io/${GH_ORG}/campushub-api:${TAG:?TAG must be set}
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      SESSION_SECRET: ${SESSION_SECRET}
+      PUBLIC_URL: ${PUBLIC_URL}
+      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-2}
+      # the tunnel really is cloudflare here so the header carries the client address
+      TRUST_CF_CONNECTING_IP: ${TRUST_CF_CONNECTING_IP:-true}
+      ALLOWED_EMAIL_DOMAINS: ${ALLOWED_EMAIL_DOMAINS}
+      TAG: ${TAG}
+      # institutional sign in refuses to boot without the two azure values
+      FEATURE_SSO: ${FEATURE_SSO:-true}
+      FEATURE_PASSWORD_LOGIN: ${FEATURE_PASSWORD_LOGIN:-false}
+      # an open form hands out institutional looking accounts nobody verified
+      FEATURE_REGISTRATION: ${FEATURE_REGISTRATION:-false}
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID:-607d63ca-9f36-4ad8-9f71-8b3efc392eb1}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      AZURE_CLIENT_SECRET: ${AZURE_CLIENT_SECRET}
+      AZURE_REDIRECT_URI: ${AZURE_REDIRECT_URI}
+      FEATURE_SCRAPER: ${FEATURE_SCRAPER:-false}
+      FEATURE_SSE: ${FEATURE_SSE:-false}
+      FEATURE_UPLOADS: ${FEATURE_UPLOADS:-false}
+      FEATURE_EMAIL_VERIFY: ${FEATURE_EMAIL_VERIFY:-false}
+      FEATURE_FLOORPLANS: ${FEATURE_FLOORPLANS:-false}
+      FEATURE_EVENTS: ${FEATURE_EVENTS:-true}
+      FEATURE_MODERATION_PANEL: ${FEATURE_MODERATION_PANEL:-true}
+      FEATURE_ICS_EXPORT: ${FEATURE_ICS_EXPORT:-true}
+    volumes:
+      - uploads:/app/uploads
+    user: 'node'
+    security_opt: ['no-new-privileges:true']
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ephemeral runs the migrations and exits it is not a service
+  migrate:
+    image: ghcr.io/${GH_ORG}/campushub-api:${TAG:?TAG must be set}
+    profiles: ['tools']
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+    command: ['npx', 'prisma', 'migrate', 'deploy', '--schema', 'apps/api/prisma/schema.prisma']
+
+  # wipes and rewrites demo data never run it against real user content
+  seed:
+    image: ghcr.io/${GH_ORG}/campushub-api:${TAG:?TAG must be set}
+    profiles: ['tools']
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      # the seed goes through config ts like the rest of the app so it needs the same variables
+      SESSION_SECRET: ${SESSION_SECRET}
+      PUBLIC_URL: ${PUBLIC_URL}
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-}
+      DEMO_STUDENT_PASSWORD: ${DEMO_STUDENT_PASSWORD:-}
+      SEED_ALLOW_PROD: ${SEED_ALLOW_PROD:-no}
+    command: ['node', 'apps/api/dist/seed/index.js']
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: ${COMPOSE_PROJECT_NAME}-caddy # fixed name used by the tunnel
+    restart: unless-stopped
+    depends_on: [api]
+    user: '1000:1000'
+    # caddy needs a writable data dir and cannot create one under /data as an ordinary user
+    environment:
+      XDG_DATA_HOME: /tmp
+      XDG_CONFIG_HOME: /tmp
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web-dist:/srv:ro
+      - uploads:/srv/uploads:ro
+    networks: [default, edge]
+    security_opt: ['no-new-privileges:true']
+
+volumes:
+  pgdata:
+  uploads:
+
+networks:
+  edge:
+    external: true
+    name: campushub-edge

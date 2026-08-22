@@ -392,3 +392,54 @@ de admin, cu fișierul real: 1667 de activități citite, zero erori.
 
 Autentificarea instituțională a fost probată cap la cap cu un cont TUIASI real, din producție.
 
+## Tehnologii
+
+| Parte | Ce se folosește |
+|---|---|
+| Limbaj | TypeScript, în ambele capete |
+| Frontend | React 19, Vite, react-router, TanStack Query, Leaflet |
+| Backend | Node.js, Express 5, Prisma |
+| Bază de date | PostgreSQL 16 |
+| Autentificare | sesiuni în bază, argon2id, OpenID Connect cu Entra ID |
+| Validare | zod, cu schemele în pachetul comun, folosite de ambele capete |
+| Date și fus orar | Luxon |
+| Citire fișiere | ExcelJS |
+| Teste | Vitest, supertest |
+
+Structura e un monorepo cu trei zone: API, interfața web și un pachet comun cu tipurile și schemele de
+validare. Contractul API e documentat rută cu rută în `docs/api-contract.md`, cu 55 de intrări
+implementate.
+
+Repo-ul are și un pipeline de integrare continuă: lint, verificare de tipuri, migrațiile pe un
+PostgreSQL curat, toate testele, build-ul, seed-ul și o căutare de secrete în tot istoricul. Deploy-ul
+pe serverul curent nu trece prin el, imaginile se construiesc direct pe gazdă.
+
+## Găzduire
+
+Aplicația e găzduită pe un server propriu, local, și e expusă public printr-un tunel Cloudflare, deci
+nu are porturi deschise spre internet. Certificatul și HTTPS-ul vin de la Cloudflare. Toată stiva
+rulează în containere: baza de date, API-ul, serverul web static și tunelul.
+
+## Ce nu e implementat încă
+
+Ordinea e cea a raportului dintre efort și efect.
+
+1. Imagini la anunțuri. Cer încărcare cu re-encodare obligatorie a fișierului, nu doar
+   redimensionare, plus eliminarea metadatelor EXIF.
+2. Planuri de etaj pe hartă. Schema și rutele sunt pregătite, dar nu există niciun plan desenat, iar
+   fără fișier nu are rost cod.
+3. Notificări prin flux deschis. Polling-ul la 60 de secunde acoperă complet nevoia; e o decizie, nu o
+   lipsă.
+4. Adaptoare pentru orarul DPPD (PDF) și pentru programul de consultații. Fișierele sunt în repo,
+   parserele nu.
+5. Scraper automat nocturn. Pipeline-ul îl așteaptă ca al treilea adaptor, dar prima rulare automată
+   cere o discuție prealabilă cu facultatea.
+6. Trecere completă de accesibilitate: parcurgere cu tastatura, „sari la conținut", contrast verificat
+   cu un instrument.
+
+## Documentație
+
+| Fișier | Ce conține |
+|---|---|
+| `docs/api-contract.md` | fiecare rută, cu forma răspunsului și regulile aplicate |
+| `docs/privacy.md` | informarea privind prelucrarea datelor, publicată și ca pagină |
